@@ -22,12 +22,6 @@ const TaskListUser = ({ userId }) => {
   const currentTasks = tasks.slice(indexOfFirstTask, indexOfLastTask);
   const [sortOrder, setSortOrder] = useState('desc');
 
-  const sortedTasks = tasks.sort((a, b) => {
-    const deadlineA = a.deadline ? new Date(a.deadline.seconds * 1000) : 0;
-    const deadlineB = b.deadline ? new Date(b.deadline.seconds * 1000) : 0;
-    return sortOrder === 'asc' ? deadlineA - deadlineB : deadlineB - deadlineA;
-  });
-
   const [statusFilter, setStatusFilter] = useState('Tất cả');
   const [typeFilter, setTypeFilter] = useState('Tất cả');
   const [progressFilter, setProgressFilter] = useState('Tất cả');

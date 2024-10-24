@@ -1,5 +1,6 @@
 import './index.css'; // Đảm bảo đường dẫn chính xác đến tệp CSS
 
+
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { auth } from './firebase'; // Import Firebase auth
@@ -18,6 +19,8 @@ import UserDashboard from './components/pages/UserDashboard';
 
 import Unauthorized from './components/pages/Unauthorized';
 import AdminDashboard from './components/pages/AdminDashboard';
+import TaskCalendar from './components/pages/TaskCalendar';
+import Reports from './components/pages/Reports';
 
 function App() {
   const [userId, setUserId] = useState(null); // Tạo state để lưu trữ userId
@@ -52,7 +55,7 @@ function App() {
          }
         >
           <Route path="task-list" element={<TaskListUser userId={userId} />} />
-          <Route path="calendar" element={<Calendar />} />
+          <Route path="calendar" element={<TaskCalendar />} />
           <Route path="dashboard" element={<UserDashboard />} />
         </Route>
 
@@ -71,6 +74,7 @@ function App() {
           <Route path="task-list" element={<TaskList />} />
           <Route path="team" element={<Team />} />
           <Route path="calendar" element={<Calendar />} />
+          <Route path="reports" element={<Reports />} />
           {/* Bạn có thể thêm các route khác tại đây */}
         </Route>
       </Routes>

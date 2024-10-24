@@ -3,10 +3,9 @@ import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase'; // Đảm bảo đường dẫn đúng
 
-import HomeIcon from '@mui/icons-material/Home';
-import GroupIcon from '@mui/icons-material/Group';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import FolderIcon from '@mui/icons-material/Folder';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
+import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import LogoutIcon from '@mui/icons-material/Logout';
 
@@ -23,9 +22,9 @@ const UserLayout = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-900">
+    <div className="flex min-h-screen bg-gray-900 overflow-hidden">
       {/* Sidebar */}
-      <nav className="w-64 bg-gray-800 text-white flex flex-col">
+      <nav className="w-64 bg-gray-800 text-white flex flex-col h-auto">
         <div className="p-6 flex-grow">
           <div className="flex items-center mb-8">
             <div className="text-white font-semibold text-xl">Dashboard</div>
@@ -33,19 +32,19 @@ const UserLayout = () => {
           <ul className="space-y-4">
             <li>
               <Link to="/user/dashboard" className="flex items-center space-x-3 text-white hover:bg-gray-700 p-2 rounded-md">
-                <HomeIcon />
+                <HomeOutlinedIcon />
                 <span>Trang chủ</span>
               </Link>
             </li>
             <li>
               <Link to="/user/calendar" className="flex items-center space-x-3 text-white hover:bg-gray-700 p-2 rounded-md">
-                <CalendarTodayIcon />
-                <span>Lịch đăng bài</span>
+                <CalendarTodayOutlinedIcon />
+                <span>Lịch trình</span>
               </Link>
             </li>
             <li>
               <Link to="/user/task-list" className="flex items-center space-x-3 text-white hover:bg-gray-700 p-2 rounded-md">
-                <FolderIcon />
+                <TaskAltOutlinedIcon />
                 <span>Danh sách nhiệm vụ</span>
               </Link>
             </li>

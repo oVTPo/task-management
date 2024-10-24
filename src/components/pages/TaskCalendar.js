@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Team = () => {
+const TaskCalendar = () => {
   return (
     <div className="h-full flex flex-col items-center justify-center text-white">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
@@ -16,4 +16,4 @@ const Team = () => {
   )
 }
 
-export default Team
+export default TaskCalendar

@@ -34,11 +34,6 @@ const TaskList = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const sortedTasks = tasks.sort((a, b) => {
-    const deadlineA = a.deadline ? new Date(a.deadline.seconds * 1000) : 0;
-    const deadlineB = b.deadline ? new Date(b.deadline.seconds * 1000) : 0;
-    return sortOrder === 'asc' ? deadlineA - deadlineB : deadlineB - deadlineA;
-  });
 
   const [statusFilter, setStatusFilter] = useState('Tất cả');
   const [typeFilter, setTypeFilter] = useState('Tất cả');
@@ -47,26 +42,28 @@ const TaskList = () => {
 
   useEffect(() => {
     const filtered = tasks.filter(task => {
-      const matchesStatus = statusFilter === 'Tất cả' || task.status === statusFilter;
-      const matchesType = typeFilter === 'Tất cả' || task.type === typeFilter;
-      const matchesProgress = progressFilter === 'Tất cả' || task.progressStatus === progressFilter;
-      const matchesAssignTo = assignToFilter === 'Tất cả' || task.assignedTo === assignToFilter;
-      const matchesSearch = task.name.toLowerCase().includes(searchTerm.toLowerCase()) || task.description.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesStatus && matchesType && matchesProgress && matchesSearch && matchesAssignTo;
+        const matchesStatus = statusFilter === 'Tất cả' || task.status === statusFilter;
+        const matchesType = typeFilter === 'Tất cả' || task.type === typeFilter;
+        const matchesProgress = progressFilter === 'Tất cả' || task.progressStatus === progressFilter;
+        const matchesAssignTo = assignToFilter === 'Tất cả' || task.assignedTo === assignToFilter;
+        const matchesSearch = task.name.toLowerCase().includes(searchTerm.toLowerCase()) || task.description.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesStatus && matchesType && matchesProgress && matchesSearch && matchesAssignTo;
     });
-  
+
+    // Sắp xếp các nhiệm vụ đã lọc
     const sortedFilteredTasks = filtered.sort((a, b) => {
       const deadlineA = a.deadline ? new Date(a.deadline.seconds * 1000) : 0;
       const deadlineB = b.deadline ? new Date(b.deadline.seconds * 1000) : 0;
-      return sortOrder === 'asc' ? deadlineA - deadlineB : deadlineB - deadlineA;
+      return sortOrder === 'asc' ? deadlineA - deadlineB : deadlineB - deadlineA; // Tăng hoặc giảm
     });
-  
+
     setFilteredTasks(sortedFilteredTasks);
-  }, [statusFilter, typeFilter, progressFilter, tasks, sortOrder, searchTerm, assignToFilter]);
+}, [statusFilter, typeFilter, progressFilter, tasks, sortOrder, searchTerm, assignToFilter]);
 
   const handleSortToggle = () => {
     setSortOrder(prevOrder => prevOrder === 'asc' ? 'desc' : 'asc');
-  };
+};
+
 
   // Định nghĩa hàm fetchTasks ngoài useEffect để có thể dùng lại nhiều nơi
 const fetchTasks = async () => {
@@ -422,14 +419,18 @@ const handleAddTask = async () => {
             <th className="py-4 px-6 text-left text-gray-600 font-semibold w-1/4">Chi Tiết</th>
             <th className="py-4 px-6 text-center text-gray-600 font-semibold w-1/12">Thực Hiện</th>
             <th className="py-4 px-6 text-left text-gray-600 font-semibold w-1/12">
-              <div className="inline-flex items-center cursor-pointer" onClick={handleSortToggle} aria-label="Sắp xếp theo hạn chót">
+            <div 
+                className="inline-flex items-center cursor-pointer" 
+                onClick={handleSortToggle} 
+                aria-label="Sắp xếp theo hạn chót"
+            >
                 <span className="mr-1">Hạn Chót</span>
                 {sortOrder === 'asc' ? (
-                  <ExpandLessIcon className="text-gray-700" />
+                    <ExpandLessIcon className="text-gray-700" />
                 ) : (
-                  <ExpandMoreIcon className="text-gray-700" />
+                    <ExpandMoreIcon className="text-gray-700" />
                 )}
-              </div>
+            </div>
             </th>
             <th className="py-4 px-6 text-center text-gray-600 font-semibold w-1/12">Trạng thái</th>
             <th className="py-4 px-6 text-center text-gray-600 font-semibold w-1/12">Tiến độ</th>
@@ -528,87 +529,6 @@ const handleAddTask = async () => {
                 <td colSpan="6" className="px-4 py-2 text-center">Không có nhiệm vụ nào được giao.</td>
               </tr>
             )}
-          {/* {loading ? (
-            <tr>
-              <td colSpan={editMode ? 8 : 7} className="py-4 px-6 text-center">
-                Đang xử lý...
-              </td>
-            </tr>
-          ) : (
-            (currentTasks && currentTasks.length > 0 ? currentTasks.map((task, index) => (
-              <tr key={task.id} className={`hover:bg-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                <td className="py-4 px-6">{task.name}</td>
-                <td className="py-4 px-6">{task.type}</td>
-                <td className="py-4 px-6">{task.description}</td>
-                <td className="py-4 px-6 text-center">{usersMap[task.assignedTo]}</td>
-                <td className="py-4 px-6 text-center">
-                  {task.deadline ? (
-                    new Date(task.deadline).toLocaleString('vi-VN', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                    })
-                  ) : (
-                    '--'
-                  )}
-                </td>
-                <td className="py-4 px-6">
-                  <span className={`px-2 py-1 rounded-full font-semibold text-sm ${
-                    task.status === 'Mới'
-                      ? 'bg-yellow-200 text-yellow-700'
-                      : task.status === 'Hoàn Thành'
-                      ? 'bg-green-200 text-green-700'
-                      : task.status === 'Sửa lại'
-                      ? 'bg-red-700 text-white'
-                      : ''
-                  }`}>
-                    {task.status}
-                  </span>
-                </td>
-                <td className="py-4 px-6">
-                  {task.productLink ? (
-                    <span className="px-2 py-1 rounded-full font-semibold text-sm bg-blue-200 text-blue-700">
-                      <a href={task.productLink} target="_blank" rel="noopener noreferrer">Xem</a>
-                    </span>
-                  ) : (
-                    '--'
-                  )}
-                </td>
-                {editMode && (
-                  <td className="py-4 px-6 flex space-x-2 text-center">
-                    <span
-                      onClick={() => {
-                        setEditTaskId(task.id);
-                        setEditTaskData({
-                          name: task.name,
-                          description: task.description,
-                          type: task.type,
-                          deadline: task.deadline,
-                        });
-                      }}
-                      className="cursor-pointer px-2 py-1 font-semibold text-sm text-blue-700 hover:underline"
-                    >
-                      Chỉnh Sửa
-                    </span>
-                    <span
-                      onClick={() => handleDeleteTask(task.id)}
-                      className="cursor-pointer px-2 py-1 font-semibold text-sm text-red-700 hover:underline"
-                    >
-                      Xoá
-                    </span>
-                  </td>
-                )}
-              </tr>
-            )) : (
-              <tr>
-                <td colSpan={editMode ? 8 : 7} className="py-4 px-6 text-center">
-                  Không có nhiệm vụ nào
-                </td>
-              </tr>
-            ))
-          )} */}
         </tbody>
       </table>
 
