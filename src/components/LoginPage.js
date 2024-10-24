@@ -16,11 +16,14 @@ const LoginPage = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Lấy thông tin từ Firestore để kiểm tra role
+      // Lấy thông tin từ Firestore để kiểm tra yêu cầu thay đổi mật khẩu
       const userDoc = await getDoc(doc(firestore, "users", user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        if (userData.role === "admin") {
+        if (userData.requiresPasswordChange) {
+          // Điều hướng đến trang tạo mật khẩu
+          navigate("/setPassword");
+        } else if (userData.role === "admin") {
           navigate("/admin");
         } else {
           navigate("/user"); // Trang cho user thông thường
@@ -63,6 +66,11 @@ const LoginPage = () => {
             Đăng Nhập
           </button>
         </form>
+        <div className="mt-4 text-center">
+          <a href="/setPassword" className="text-blue-600 hover:underline">
+            Đăng nhập lần đầu?
+          </a>
+        </div>
       </div>
     </div>
   );

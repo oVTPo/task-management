@@ -1,6 +1,5 @@
 import './index.css'; // Đảm bảo đường dẫn chính xác đến tệp CSS
 
-
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { auth } from './firebase'; // Import Firebase auth
@@ -22,6 +21,8 @@ import AdminDashboard from './components/pages/AdminDashboard';
 import TaskCalendar from './components/pages/TaskCalendar';
 import Reports from './components/pages/Reports';
 
+import { setUserOnlineStatus } from './utils/userStatus'; // Import hàm cập nhật trạng thái online
+
 function App() {
   const [userId, setUserId] = useState(null); // Tạo state để lưu trữ userId
 
@@ -32,6 +33,9 @@ function App() {
         // Nếu người dùng đã đăng nhập, lấy userId
         setUserId(user.uid);
         console.log("User ID sau khi đăng nhập:", user.uid);
+
+        // Gọi hàm để cập nhật trạng thái online
+        setUserOnlineStatus(user.uid); // Cập nhật trạng thái online
       } else {
         setUserId(null); // Nếu không có user, reset userId
       }

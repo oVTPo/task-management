@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase'; // Đảm bảo đường dẫn đúng
+import { setUserOfflineStatus } from '../../utils/userStatus';
 
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
@@ -14,7 +15,9 @@ const AdminLayout = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
+    const uid = auth.currentUser.uid;
     try {
+      setUserOfflineStatus(uid);
       await signOut(auth);
       navigate('/login');
     } catch (error) {

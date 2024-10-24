@@ -2,6 +2,9 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth"; 
 import { getFirestore } from "firebase/firestore"; 
+import { getDatabase } from 'firebase/database';
+
+
 
 // Cấu hình Firebase từ biến môi trường
 const firebaseConfig = {
@@ -17,10 +20,10 @@ const firebaseConfig = {
 // Khởi tạo ứng dụng Firebase
 const app = initializeApp(firebaseConfig);
 
-// Khởi tạo Firebase Auth
-const auth = getAuth(app); // Giữ lại khai báo này
+// Khởi tạo Firebase Auth, Firestore và Database
+const auth = getAuth(app);
+const firestore = getFirestore(app);
+const database = getDatabase(app);
 
-// Khởi tạo Firestore
-const firestore = getFirestore(app); // Giữ lại khai báo này
-
-export { auth, firestore }; // Xuất tất cả hai biến
+// Xuất các biến đã khởi tạo
+export { auth, firestore, database };
