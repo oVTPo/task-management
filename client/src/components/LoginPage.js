@@ -30,7 +30,7 @@ const LoginPage = () => {
         }
       }
     } catch (error) {
-      setError(error.message);
+      setError('Email hoặc mật khẩu sai. Vui lòng đăng nhập lại');
     }
   };
 
@@ -38,7 +38,6 @@ const LoginPage = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-6 rounded-lg shadow-md w-96">
         <h2 className="text-2xl font-bold mb-6 text-center">Đăng Nhập</h2>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
         <form onSubmit={handleLogin}>
           <div className="mb-4">
             <label className="block text-gray-700 mb-2">Email</label>
@@ -62,6 +61,7 @@ const LoginPage = () => {
               className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-300"
             />
           </div>
+          {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
           <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-200">
             Đăng Nhập
           </button>
