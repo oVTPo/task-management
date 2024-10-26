@@ -20,6 +20,7 @@ import Unauthorized from './components/pages/Unauthorized';
 import AdminDashboard from './components/pages/AdminDashboard';
 import TaskCalendar from './components/pages/TaskCalendar';
 import Reports from './components/pages/Reports';
+import Notification from './components/pages/Notifications';
 
 import { setUserOnlineStatus } from './utils/userStatus'; // Import hàm cập nhật trạng thái online
 import FirstLogin from './components/FirstLogin';
@@ -63,6 +64,7 @@ function App() {
           <Route path="task-list" element={<TaskListUser userId={userId} />} />
           <Route path="calendar" element={<TaskCalendar />} />
           <Route path="dashboard" element={<UserDashboard />} />
+          <Route path="notifications" element={<Notification />} />
         </Route>
 
         {/* Route cần bảo vệ cho admin */}

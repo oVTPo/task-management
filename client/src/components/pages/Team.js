@@ -56,21 +56,9 @@ const Team = () => {
   const handleAddUserSubmit = async (e) => {
     e.preventDefault();
     try {
-        // Lưu UID của người dùng hiện tại
-        // const currentUser = auth.currentUser; // Lấy người dùng hiện tại
-        // const currentUid = currentUser ? currentUser.uid : null; // UID của người dùng đang đăng nhập
 
         await addUser(newUser.email, newUser.name, newUser.role);
         alert("Người dùng được thêm thành công!");
-
-        // Kiểm tra trạng thái người dùng sau khi thêm
-        // onAuthStateChanged(auth, (user) => {
-        //     if (user) {
-        //         console.log("Người dùng vẫn đăng nhập:", user);
-        //     } else {
-        //         console.log("Người dùng đã bị đăng xuất.");
-        //     }
-        // });
 
         togglePopup(); // Đóng popup sau khi thêm thành công
         setNewUser({ name: '', email: '', role: '' }); // Reset form
@@ -126,7 +114,7 @@ const Team = () => {
       </div>
       <div className="bg-white shadow-lg rounded-lg p-6 mb-6">
         <div className='flex justify-between mb-4'>
-          <button onClick={togglePopup} className="bg-blue-500 text-white p-2 rounded">
+          <button onClick={togglePopup} className="bg-primary text-white p-2 rounded">
             Thêm người dùng mới
           </button>
           <button 
