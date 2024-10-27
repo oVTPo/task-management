@@ -5,6 +5,8 @@ import { auth, db } from '../../firebase';
 import { setUserOfflineStatus } from '../../utils/userStatus';
 import getImageURL from '../../utils/getImage';
 import { getDoc, doc } from "firebase/firestore";
+import { subscribeToTaskNotifications, listenForNotifications } from '../../utils/taskNotification';
+
 import HomeIcon from '@mui/icons-material/Home';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -17,6 +19,8 @@ const UserLayout = () => {
   const [imageURL, setImageURL] = useState(null);
   const [name, setName] = useState('');
   const imageName = "IconNG.png";
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0); // Track unread count
 
   const handleLogout = async () => {
     const uid = auth.currentUser.uid;
@@ -39,6 +43,27 @@ const UserLayout = () => {
   }, [imageName]);
 
   useEffect(() => {
+    const uid = auth.currentUser.uid;
+
+    // Subscribe to task notifications
+    const unsubscribeTaskNotifications = subscribeToTaskNotifications(uid, (newTask) => {
+      console.log("Nhiệm vụ mới:", newTask);
+      setHasUnreadNotifications(true); // Mark as unread when new task arrives
+    });
+
+    // Listen for unread notifications
+    const unsubscribeNotifications = listenForNotifications((hasUnread, unreadCount) => {
+      setHasUnreadNotifications(hasUnread);
+      setUnreadCount(unreadCount); // Update unread count
+    });
+
+    return () => {
+      unsubscribeTaskNotifications();
+      unsubscribeNotifications();
+    };
+  }, []);
+
+  useEffect(() => {
     const fetchUserName = async () => {
       try {
         const userDocRef = doc(db, "users", auth.currentUser.uid);
@@ -56,10 +81,19 @@ const UserLayout = () => {
     fetchUserName();
   }, []);
 
+  // Handle notification read
+  const handleNotificationClick = () => {
+    // Here, you would implement your logic to mark notifications as read in your Firestore
+    // For example:
+    // await updateNotificationStatusInFirestore(auth.currentUser.uid);
+    setHasUnreadNotifications(false); // Set to false when the notification is read
+    setUnreadCount(0); // Reset unread count
+  };
+
   return (
     <div className="flex min-h-screen bg-white-900 overflow-hidden">
       {/* Sidebar */}
-      <nav className="w-64 bg-white flex flex-col h-auto drop-shadow-2xl">
+      <nav className="w-64 bg-white flex flex-col h-screen drop-shadow-2xl">
         <div className="p-6 flex-grow">
           <div className="flex items-center mb-12">
             {imageURL ? (
@@ -89,13 +123,19 @@ const UserLayout = () => {
             <li>
               <NavLink
                 to="/user/notifications"
+                onClick={handleNotificationClick} // Handle click to mark as read
                 className={({ isActive }) =>
                   `flex items-center space-x-3 font-semibold p-2 rounded-md ${
                     isActive ? 'text-primary bg-primary-50' : 'text-gray-500'
                   }`
                 }
               >
-                <NotificationsIcon />
+                <div className="relative">
+                  <NotificationsIcon />
+                  {hasUnreadNotifications && (
+                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-white"></span> // Chấm đỏ
+                  )}
+                </div>
                 <span>Thông báo</span>
               </NavLink>
             </li>
@@ -152,7 +192,7 @@ const UserLayout = () => {
       </nav>
 
       {/* Nội dung chính */}
-      <div className="flex-1 p-6 bg-gray-100">
+      <div className="flex-1 p-6 bg-gray-100 overflow-y-auto h-screen">
         <Outlet /> {/* Hiển thị trang con */}
       </div>
     </div>

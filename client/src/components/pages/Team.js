@@ -6,9 +6,9 @@ import Popup from "../layout/Popup";
 
 import { addUser } from '../../utils/addUser'; // Import hàm thêm người dùng
 
-import { auth, db } from '../../firebase'; // Import auth
-import { deleteDoc, doc, getFirestore } from 'firebase/firestore'; // Import hàm xóa tài liệu
-import { getAuth, deleteUser, onAuthStateChanged } from 'firebase/auth'; // Import hàm xóa người dùng từ Auth (chỉ dùng được trên server với Admin SDK)
+// import { auth, db } from '../../firebase'; // Import auth
+// import { deleteDoc, doc, getFirestore } from 'firebase/firestore'; // Import hàm xóa tài liệu
+// import { getAuth, deleteUser, onAuthStateChanged } from 'firebase/auth'; // Import hàm xóa người dùng từ Auth (chỉ dùng được trên server với Admin SDK)
 
 const Team = () => {
   const [users, setUsers] = useState([]);
@@ -29,7 +29,7 @@ const Team = () => {
         role: doc.data().role || '', // Lưu vai trò của người dùng
         status: 'offline', // Mặc định trạng thái là offline
       }));
-
+  
       // Cập nhật trạng thái online/offline cho từng user
       usersList.forEach(user => {
         const userStatusRef = ref(database, `status/${user.id}`);
@@ -40,7 +40,7 @@ const Team = () => {
           setUsers(prevUsers => [...prevUsers]); // Cập nhật lại state
         });
       });
-
+  
       setUsers(usersList);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách người dùng:", error);
@@ -56,18 +56,20 @@ const Team = () => {
   const handleAddUserSubmit = async (e) => {
     e.preventDefault();
     try {
-
+        // Gọi hàm thêm người dùng
         await addUser(newUser.email, newUser.name, newUser.role);
         alert("Người dùng được thêm thành công!");
 
-        togglePopup(); // Đóng popup sau khi thêm thành công
+        // Đóng popup sau khi thêm thành công
+        togglePopup();
         setNewUser({ name: '', email: '', role: '' }); // Reset form
-        fetchUsers(); // Reload danh sách người dùng
+
+        // Gọi fetchUsers sau khi hoàn thành việc thêm người dùng
+        await fetchUsers(); // Reload danh sách người dùng
     } catch (error) {
         alert("Có lỗi khi thêm người dùng: " + error.message);
     }
-  };
-
+};
   
 
   // Bật/tắt chế độ chỉnh sửa

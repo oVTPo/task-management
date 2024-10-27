@@ -1,14 +1,28 @@
-import React, { useState } from "react";
-import { auth, firestore } from "../firebase"; 
+import React, { useState, useEffect } from "react";
+import { auth, firestore, db } from "../firebase"; 
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+
+import getImageURL from '../utils/getImage';
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate(); // Hook điều hướng
+
+  const [imageURL, setImageURL] = useState(null);
+  const imageName = "IconNG.png";
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      const url = await getImageURL(imageName);
+      setImageURL(url);
+    };
+
+    fetchImage();
+  }, [imageName]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -37,6 +51,9 @@ const LoginPage = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-6 rounded-lg shadow-md w-96">
+        <div className="justify-center flex mb-2">
+          <img src={imageURL} alt="Icon NG" className="w-16 h-16 rounded-full" />
+        </div>
         <h2 className="text-2xl font-bold mb-4 text-center">Đăng Nhập</h2>
         <form onSubmit={handleLogin}>
           <div className="mb-4">

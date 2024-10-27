@@ -20,6 +20,9 @@ module.exports = {
           900: '#001A66',      // Màu sắc độ 900 (tối nhất)
         },
       },
+      height: {
+        '112': '28rem', // Chiều cao giữa 96 và 128
+      },
     },
   },
   plugins: [],

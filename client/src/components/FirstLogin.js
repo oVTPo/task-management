@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import { getAuth, signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
 
 import { firestore } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
+import getImageURL from '../utils/getImage';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const FirstLogin = () => {
@@ -13,6 +14,19 @@ const FirstLogin = () => {
   const [error, setError] = useState('');
   const [isEmailValid, setIsEmailValid] = useState(false);
   const navigate = useNavigate();
+
+
+  const [imageURL, setImageURL] = useState(null);
+  const imageName = "IconNG.png";
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      const url = await getImageURL(imageName);
+      setImageURL(url);
+    };
+
+    fetchImage();
+  }, [imageName]);
 
   const checkEmail = async () => {
     const auth = getAuth();
@@ -61,6 +75,9 @@ const FirstLogin = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-6 rounded-lg shadow-md w-96">
+        <div className="justify-center flex mb-2">
+          <img src={imageURL} alt="Icon NG" className="w-16 h-16 rounded-full" />
+        </div>
         <h2 className="text-2xl font-bold mb-6 text-center">Đăng Nhập Lần Đầu</h2>
         <form onSubmit={handleSubmit}>
         <div className="mb-4 relative"> {/* Set relative positioning for the parent */}

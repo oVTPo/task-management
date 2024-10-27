@@ -16,8 +16,8 @@ import LogoutIcon from '@mui/icons-material/Logout';
 const AdminLayout = () => {
   const navigate = useNavigate();
   const [imageURL, setImageURL] = useState(null);
-  const [name, setName] = useState('');
   const imageName = "IconNG.png";
+  const [name, setName] = useState('');
 
   const handleLogout = async () => {
     const uid = auth.currentUser.uid;
