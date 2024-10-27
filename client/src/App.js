@@ -50,6 +50,7 @@ function App() {
     <Router>
       <Routes>
         {/* Các route công khai */}
+        <Route path="/" element={<LoginPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/first-login" element={<FirstLogin />} />
