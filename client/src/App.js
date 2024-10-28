@@ -15,6 +15,7 @@ import TaskListUser from './components/pages/TaskListUser';
 import Team from './components/pages/Team';
 import Calendar from './components/pages/Calendar';
 import UserDashboard from './components/pages/UserDashboard';
+import UserReports from './components/pages/UserReports';
 
 import Unauthorized from './components/pages/Unauthorized';
 import AdminDashboard from './components/pages/AdminDashboard';
@@ -66,6 +67,7 @@ function App() {
           <Route path="calendar" element={<TaskCalendar />} />
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="notifications" element={<Notification />} />
+          <Route path="reports" element={<UserReports />} />
         </Route>
 
         {/* Route cần bảo vệ cho admin */}

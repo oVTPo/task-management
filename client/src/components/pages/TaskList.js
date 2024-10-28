@@ -526,7 +526,7 @@ const handleAddTask = async () => {
               })
             ) : (
               <tr>
-                <td colSpan="6" className="px-4 py-2 text-center">Không có nhiệm vụ nào được giao.</td>
+                <td colSpan="8" className="px-4 py-2 text-center">Không có nhiệm vụ nào được giao.</td>
               </tr>
             )}
         </tbody>
