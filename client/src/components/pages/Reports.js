@@ -66,6 +66,10 @@ const Reports = () => {
   const getUserTasks = (userId) => {
     return tasks.filter(task => {
       const deadline = task.deadline?.toDate(); // Chuyển đổi timestamp thành đối tượng Date
+
+      // Kiểm tra deadline và có giá trị hợp lệ
+      if (!deadline) return false; // Nếu deadline không hợp lệ, bỏ qua công việc này
+
       return task.assignedTo === userId && 
              deadline.getMonth() + 1 === selectedMonth && // Kiểm tra tháng
              deadline.getFullYear() === selectedYear; // Kiểm tra năm
@@ -160,18 +164,18 @@ const Reports = () => {
                             <div className="bg-gray-200 h-2 rounded flex-1"> {/* Thanh nền */}
                                 <div
                                 className="bg-red-300 h-full rounded"
-                                style={{ width: `${metrics.latePercentage}%` }} // Đảm bảo chiều rộng của thanh màu xanh lá
+                                style={{ width: `${metrics.latePercentage}%` }} // Đảm bảo chiều rộng của thanh
                                 />
                             </div>
                         </div>
                     </td>
                     <td className="py-4 px-6">
-                        <div className="relative w-full flex items-center">
+                        <div className="relative w-full flex items-center"> {/* Hiển thị % Hoàn thành */}
                             <span className="text-sm font-semibold pr-2">{metrics.completionPercentage.toFixed(2)}%</span>
                             <div className="bg-gray-200 h-2 rounded flex-1"> {/* Thanh nền */}
                                 <div
                                 className="bg-green-300 h-full rounded"
-                                style={{ width: `${metrics.completionPercentage}%` }} // Đảm bảo chiều rộng của thanh màu xanh lá
+                                style={{ width: `${metrics.completionPercentage}%` }} // Đảm bảo chiều rộng của thanh
                                 />
                             </div>
                         </div>
