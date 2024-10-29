@@ -66,11 +66,14 @@ const Reports = () => {
   const getUserTasks = (userId) => {
     return tasks.filter(task => {
       const deadline = task.deadline?.toDate(); // Chuyển đổi timestamp thành đối tượng Date
-      return task.assignedTo === userId && 
+      // Kiểm tra xem deadline có tồn tại và có thuộc về userId không
+      return deadline && 
+             task.assignedTo === userId && 
              deadline.getMonth() + 1 === selectedMonth && // Kiểm tra tháng
              deadline.getFullYear() === selectedYear; // Kiểm tra năm
     });
   };
+  
 
   // Hàm tính tổng KPI, số công việc, % Hoàn thành, và % Trễ cho mỗi người dùng
   const calculateMetricsByUserId = (userId) => {

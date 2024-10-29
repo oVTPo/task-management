@@ -5,6 +5,7 @@ import { collection, getDocs, addDoc, deleteDoc, updateDoc, doc, Timestamp } fro
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import SearchIcon from '@mui/icons-material/Search';
+import Popup from '../layout/Popup';
 
 const TaskList = () => {
   const [tasks, setTasks] = useState([]);
@@ -13,9 +14,12 @@ const TaskList = () => {
   const [editTaskData, setEditTaskData] = useState({});
   const [usersMap, setUsersMap] = useState({});
   const [editMode, setEditMode] = useState(false);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [actionType, setActionType] = useState('');
   const taskTypes = ['Tất cả','Thiết kế', 'Content', 'Quay/Chụp', 'Xử lý ảnh', 'Kế hoạch', 'Edit video', 'Website'];
 
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const tasksPerPage = 10;
@@ -39,6 +43,12 @@ const TaskList = () => {
   const [typeFilter, setTypeFilter] = useState('Tất cả');
   const [progressFilter, setProgressFilter] = useState('Tất cả');
   const [assignToFilter, setAssignToFilter] = useState('Tất cả');
+
+ // Hàm bật/tắt popup thêm người dùng
+  const togglePopup = (type) => {
+    setActionType(type);
+    setIsPopupOpen(!isPopupOpen);
+  };
 
   useEffect(() => {
     const filtered = tasks.filter(task => {
@@ -110,6 +120,7 @@ useEffect(() => {
 // Trong hàm handleEditTask:
 const handleEditTask = async () => {
   setLoading(true);
+  setSuccess(false);
   try {
     const taskDoc = doc(firestore, 'tasks', editTaskId);
     const deadlineTimestamp = editTaskData.deadline
@@ -122,7 +133,8 @@ const handleEditTask = async () => {
       status: editTaskData.status || 'Mới',
       type: editTaskData.type || '',
       deadline: deadlineTimestamp,
-      assignedTo: editTaskData.assignedTo || '', // Thêm trường assignedTo
+      assignedTo: editTaskData.assignedTo || '',
+      
     };
 
     // Xóa các trường có giá trị undefined
@@ -136,10 +148,11 @@ const handleEditTask = async () => {
       await updateDoc(taskDoc, updatedData);
     }
 
+    setSuccess(true); // Set success to true after successful save
+    setTimeout(() => setSuccess(false), 2000);
+    setTimeout(() => setEditTaskId(null), 2000);
+    setTimeout(() => setEditTaskData({}), 2000); 
     await fetchTasks(); 
-    setEditTaskId(null);
-    setEditTaskData({});
-    alert("Chỉnh sửa thành công!");
   } catch (error) {
     console.error("Lỗi khi cập nhật nhiệm vụ:", error);
     alert("Đã xảy ra lỗi khi lưu chỉnh sửa.");
@@ -148,10 +161,9 @@ const handleEditTask = async () => {
   }
 };
 
-
-
 const handleAddTask = async () => {
   setLoading(true);
+  setSuccess(false);
   try {
     const tasksCollection = collection(firestore, 'tasks');
 
@@ -168,8 +180,10 @@ const handleAddTask = async () => {
       type: newTask.type,
       progressStatus: null
     });
-
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 2000);
     setNewTask(null);
+    setTimeout(() => togglePopup(), 2000);
     await fetchTasks();
   } catch (error) {
     console.error("Lỗi khi thêm nhiệm vụ mới:", error);
@@ -179,9 +193,6 @@ const handleAddTask = async () => {
 };
 
 
-  const handleCancel = () => {
-    setNewTask(null); // Đặt lại state của newTask về null để ẩn form
-  };
 
   const handleDeleteTask = async (id) => {
     try {
@@ -189,19 +200,6 @@ const handleAddTask = async () => {
       fetchTasks(); // Cập nhật danh sách nhiệm vụ sau khi xóa
     } catch (error) {
       console.error("Lỗi khi xoá nhiệm vụ:", error);
-    }
-  };
-
-  const loadTasks = async () => {
-    setLoading(true);
-    try {
-      const fetchedTasks = await fetchTasks();
-      console.log('Nhiệm vụ sau khi fetch:', fetchedTasks); // Kiểm tra dữ liệu
-      setTasks(fetchedTasks);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -276,140 +274,19 @@ const handleAddTask = async () => {
                 type: taskTypes[0] || '',
               });
               setEditMode(false);
+              togglePopup('add');
             }}
             className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-            disabled={newTask !== null}
           >
             Thêm Nhiệm Vụ
           </button>
           <button
             onClick={() => setEditMode(!editMode)}
             className="bg-gray-500 text-white px-4 py-2 rounded-lg"
-            disabled={newTask !== null}
           >
             {editMode ? 'Thoát' : 'Chỉnh Sửa'}
           </button>
         </div>
-        {/* Hiển thị form chỉnh sửa nhiệm vụ */}
-        {editTaskId && (
-          <div className="mt-6 bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Chỉnh Sửa Nhiệm Vụ</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                placeholder="Tên nhiệm vụ"
-                value={editTaskData.name || ''}
-                onChange={e => setEditTaskData({ ...editTaskData, name: e.target.value })}
-                className="border p-2 rounded-lg"
-              />
-              <select
-                value={editTaskData.assignedTo || ''}
-                onChange={e => setEditTaskData({ ...editTaskData, assignedTo: e.target.value })}
-                className="border p-2 rounded-lg"
-              >
-                {Object.entries(usersMap).map(([id, name]) => (
-                  <option key={id} value={id}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <textarea
-                placeholder="Mô tả nhiệm vụ"
-                value={editTaskData.description || ''}
-                onChange={e => setEditTaskData({ ...editTaskData, description: e.target.value })}
-                className="border p-2 rounded-lg col-span-2"
-              />
-              <select
-                value={editTaskData.status || ''}
-                onChange={e => setEditTaskData({ ...editTaskData, status: e.target.value })}
-                className="border p-2 rounded-lg"
-              >
-                <option value="Mới">Mới</option>
-                <option value="Hoàn thành">Hoàn thành</option>
-                <option value="Sửa lại">Sửa lại</option>
-              </select>
-              <input
-                type="datetime-local"
-                value={editTaskData.deadline ? new Date(editTaskData.deadline).toISOString().slice(0, 16) : ""}
-                onChange={(e) => setEditTaskData({ ...editTaskData, deadline: e.target.value })}
-                className="border p-2 rounded-lg"
-              />
-              <button
-                onClick={handleEditTask}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg col-span-2"
-              >
-                Lưu Chỉnh Sửa
-              </button>
-              <button
-                onClick={() => setEditTaskId(null)}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg col-span-2"
-              >
-                Hủy
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Form Thêm Nhiệm Vụ */}
-        {newTask && (
-          <div className="mb-6 bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Thêm Nhiệm Vụ Mới</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                placeholder="Tên nhiệm vụ"
-                value={newTask.name}
-                onChange={e => setNewTask({ ...newTask, name: e.target.value })}
-                className="border p-2 rounded-lg"
-              />
-              <select
-                value={newTask.type}
-                onChange={e => setNewTask({ ...newTask, type: e.target.value })}
-                className="border p-2 rounded-lg"
-              >
-                {taskTypes.map(type => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-              <textarea
-                placeholder="Mô tả nhiệm vụ"
-                value={newTask.description}
-                onChange={e => setNewTask({ ...newTask, description: e.target.value })}
-                className="border p-2 rounded-lg col-span-2"
-              />
-              <select
-                value={newTask.assignedTo}
-                onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })}
-                className="border p-2 rounded-lg"
-              >
-                {Object.entries(usersMap).map(([id, name]) => (
-                  <option key={id} value={id}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="datetime-local"
-                value={newTask.deadline || ''}
-                onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
-              />
-              <button
-                onClick={handleAddTask}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg col-span-2"
-              >
-                Lưu Nhiệm Vụ
-              </button>
-              <button
-                onClick={handleCancel}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg col-span-2"
-              >
-                Hủy
-              </button>
-            </div>
-          </div>
-        )}
         {/* Bảng nhiệm vụ */}
       <table className="min-w-full h-full table-auto bg-white rounded-lg">
         <thead className="bg-gray-50">
@@ -488,7 +365,7 @@ const handleAddTask = async () => {
                         {task.progressStatus}
                       </span>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-6 text-center">
                         {task.productLink ? (
                           <span className="px-2 py-1 rounded-full font-semibold text-sm bg-blue-200 text-blue-700">
                             <a href={task.productLink} target="_blank" rel="noopener noreferrer">Xem</a>
@@ -508,6 +385,7 @@ const handleAddTask = async () => {
                                 type: task.type,
                                 deadline: task.deadline,
                               });
+                              togglePopup('edit');
                             }}
                             className="cursor-pointer px-2 py-1 font-semibold text-sm text-blue-700 hover:underline"
                           >
@@ -526,7 +404,7 @@ const handleAddTask = async () => {
               })
             ) : (
               <tr>
-                <td colSpan="6" className="px-4 py-2 text-center">Không có nhiệm vụ nào được giao.</td>
+                <td colSpan="8" className="px-4 py-2 text-center">Không có nhiệm vụ nào được giao.</td>
               </tr>
             )}
         </tbody>
@@ -565,7 +443,221 @@ const handleAddTask = async () => {
           ))}
         </div>
       </div>
-
+      
+      {/* Form Thêm Nhiệm Vụ */}
+      {newTask && actionType === 'add' && (
+      <Popup isOpen={isPopupOpen} onClose={togglePopup}>
+            <h3 className="text-2xl font-bold mb-8">Thêm Nhiệm Vụ Mới</h3>
+            <div className="w-full">
+              <div className='mb-4'>
+                <input
+                  type="text"
+                  placeholder="Tên nhiệm vụ"
+                  value={newTask.name}
+                  onChange={e => setNewTask({ ...newTask, name: e.target.value })}
+                  className="border p-2 rounded-lg flex-grow w-full"
+                />
+              </div>
+              <div className='flex mb-4'>
+                <select
+                  value={newTask.type}
+                  onChange={e => setNewTask({ ...newTask, type: e.target.value })}
+                  className="border p-2 mr-4 rounded-lg flex-grow"
+                >
+                  {taskTypes.map(type => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={newTask.assignedTo}
+                  onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })}
+                  className="border p-2 mr-4 rounded-lg flex-grow"
+                >
+                  {Object.entries(usersMap).map(([id, name]) => (
+                    <option key={id} value={id}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                type="datetime-local"
+                value={newTask.deadline || ''}
+                onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
+                className='border p-2 rounded-lg'
+              />
+              </div>
+              <div className='flex-grow mb-2'>
+                <textarea
+                  placeholder="Mô tả nhiệm vụ"
+                  value={newTask.description}
+                  onChange={e => setNewTask({ ...newTask, description: e.target.value })}
+                  className="border p-2 rounded-lg w-full h-2/3"
+                />
+              </div>
+              <div className='flex justify-end'>
+                <button type="button" onClick={togglePopup} className="bg-gray-500 text-white p-2 rounded-lg mr-2">
+                  Hủy
+                </button>
+                <button
+                  onClick={handleAddTask}
+                  disabled={loading || success}
+                  className={`px-4 py-2 rounded-lg col-span-2 ${
+                    success ? "bg-green-500 text-white" : "bg-primary text-white"
+                  }`}
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <svg
+                        aria-hidden="true"
+                        className="inline w-4 h-4 text-white-200 animate-spin dark:text-white-600 fill-white-600 mr-2"
+                        viewBox="0 0 100 101"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                          fill="currentColor"
+                        />
+                        <path
+                          d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                          fill="currentFill"
+                        />
+                      </svg>
+                      Đang tạo...
+                    </div>
+                  ) : success ? (
+                    <div className="flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 mr-2 text-white animate-bounce"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      Đã lưu
+                    </div>
+                  ) : (
+                    'Lưu Nhiệm Vụ'
+                  )}
+                </button>
+              </div>
+            </div>
+         </Popup>
+                  
+        )}
+        {editTaskId && actionType === 'edit' && (
+        <Popup isOpen={isPopupOpen} onClose={togglePopup}>
+          <h3 className="text-2xl font-semibold mb-8">Chỉnh Sửa Nhiệm Vụ</h3>
+          <div className="w-full">
+            <div className='mb-4'>
+              <input
+                type="text"
+                placeholder="Tên nhiệm vụ"
+                value={editTaskData.name || ''}
+                onChange={e => setEditTaskData({ ...editTaskData, name: e.target.value })}
+                className="border p-2 rounded-lg flex-grow w-full "
+              />
+            </div>
+            <div className='justify-between flex mb-4'>
+              <select
+                value={editTaskData.assignedTo || ''}
+                onChange={e => setEditTaskData({ ...editTaskData, assignedTo: e.target.value })}
+                className="border p-2 rounded-lg mr-4 w-full"
+              >
+                {Object.entries(usersMap).map(([id, name]) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <select
+              value={editTaskData.status || ''}
+              onChange={e => setEditTaskData({ ...editTaskData, status: e.target.value })}
+              className="border p-2 rounded-lg mr-4 w-full"
+            >
+              <option value="Mới">Mới</option>
+              <option value="Hoàn thành">Hoàn thành</option>
+              <option value="Sửa lại">Sửa lại</option>
+            </select>
+            <input
+              type="datetime-local"
+              value={editTaskData.deadline ? new Date(editTaskData.deadline).toISOString().slice(0, 16) : ""}
+              onChange={(e) => setEditTaskData({ ...editTaskData, deadline: e.target.value })}
+              className="border p-2 rounded-lg"
+            />
+            </div>
+            <textarea
+              placeholder="Mô tả nhiệm vụ"
+              value={editTaskData.description || ''}
+              onChange={e => setEditTaskData({ ...editTaskData, description: e.target.value })}
+              className="border p-2 rounded-lg col-span-2 w-full mb-4"
+            />
+            <div className='flex justify-end'>
+                <button type="button" onClick={togglePopup} className="bg-gray-500 text-white p-2 rounded-lg mr-2">
+                  Hủy
+                </button>
+                <button
+                  onClick={handleEditTask}
+                  disabled={loading || success}
+                  className={`px-4 py-2 rounded-lg col-span-2 ${
+                    success ? "bg-green-500 text-white" : "bg-primary text-white"
+                  }`}
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <svg
+                        aria-hidden="true"
+                        className="inline w-4 h-4 text-white-200 animate-spin dark:text-white-600 fill-white-600 mr-2"
+                        viewBox="0 0 100 101"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                          fill="currentColor"
+                        />
+                        <path
+                          d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                          fill="currentFill"
+                        />
+                      </svg>
+                      Đang lưu...
+                    </div>
+                  ) : success ? (
+                    <div className="flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 mr-2 text-white animate-bounce"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      Đã lưu
+                    </div>
+                  ) : (
+                    'Lưu Nhiệm Vụ'
+                  )}
+                </button>
+              </div>
+          </div>
+        </Popup>
+        )}
       </div>
     </div>
   );
