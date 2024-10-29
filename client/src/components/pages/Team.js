@@ -179,7 +179,7 @@ const Team = () => {
 
       {/* Popup thêm người dùng */}
       <Popup isOpen={isPopupOpen} onClose={togglePopup}>
-        <h2 className="text-xl font-bold mb-4">Thêm người dùng mới</h2>
+        <h2 className="text-2xl font-bold mb-8">Thêm người dùng mới</h2>
         <form onSubmit={handleAddUserSubmit}>
           <div>
             <input
@@ -214,10 +214,10 @@ const Team = () => {
             </select>
           </div>
           <div className="flex justify-end">
-            <button type="button" onClick={togglePopup} className="bg-gray-500 text-white p-2 rounded mr-2">
+            <button type="button" onClick={togglePopup} className="bg-gray-500 text-white p-2 rounded-lg mr-2">
               Hủy
             </button>
-            <button type="submit" className="bg-blue-500 text-white p-2 rounded">
+            <button type="submit" className="bg-blue-500 text-white p-2 rounded-lg">
               Thêm người dùng
             </button>
           </div>
