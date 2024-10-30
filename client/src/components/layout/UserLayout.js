@@ -7,6 +7,8 @@ import getImageURL from '../../utils/getImage';
 import { getDoc, doc } from "firebase/firestore";
 import { subscribeToTaskNotifications, listenForNotifications } from '../../utils/taskNotification';
 
+import useSingleSession from '../hooks/useSingleSession';
+
 import HomeIcon from '@mui/icons-material/Home';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -15,6 +17,9 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import LogoutIcon from '@mui/icons-material/Logout';
 
 const UserLayout = () => {
+  const userId = auth.currentUser ? auth.currentUser.uid : null;
+  useSingleSession(userId);
+  
   const navigate = useNavigate();
   const [imageURL, setImageURL] = useState(null);
   const [name, setName] = useState('');

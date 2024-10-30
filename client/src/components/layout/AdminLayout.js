@@ -6,6 +6,8 @@ import { getDoc, doc } from "firebase/firestore";
 import { setUserOfflineStatus } from '../../utils/userStatus';
 import getImageURL from '../../utils/getImage';
 
+import useSingleSession from '../hooks/useSingleSession';
+
 import HomeIcon from '@mui/icons-material/Home';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -14,6 +16,9 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import LogoutIcon from '@mui/icons-material/Logout';
 
 const AdminLayout = () => {
+  const userId = auth.currentUser ? auth.currentUser.uid : null;
+  useSingleSession(userId);
+  
   const navigate = useNavigate();
   const [imageURL, setImageURL] = useState(null);
   const imageName = "IconNG.png";
