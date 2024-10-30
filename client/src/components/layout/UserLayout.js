@@ -4,6 +4,8 @@ import { signOut } from 'firebase/auth';
 import { auth, db } from '../../firebase';
 import { setUserOfflineStatus } from '../../utils/userStatus';
 import getImageURL from '../../utils/getImage';
+import { setUserOnlineStatus } from '../../utils/userStatus';
+import { logUserLogin, logUserLogout} from '../../utils/loginDuration';
 import { getDoc, doc } from "firebase/firestore";
 import { subscribeToTaskNotifications, listenForNotifications } from '../../utils/taskNotification';
 
@@ -19,7 +21,8 @@ import LogoutIcon from '@mui/icons-material/Logout';
 const UserLayout = () => {
   const userId = auth.currentUser ? auth.currentUser.uid : null;
   useSingleSession(userId);
-  
+
+  const user = auth.currentUser;
   const navigate = useNavigate();
   const [imageURL, setImageURL] = useState(null);
   const [name, setName] = useState('');
@@ -27,16 +30,48 @@ const UserLayout = () => {
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0); // Track unread count
 
-  const handleLogout = async () => {
-    const uid = auth.currentUser.uid;
-    try {
-      setUserOfflineStatus(uid);
-      await signOut(auth);
-      navigate('/login');
-    } catch (error) {
-      console.error('Đăng xuất thất bại:', error);
+const handleLogout = async () => {
+    const uid = auth.currentUser ? auth.currentUser.uid : null; // Lấy UID của người dùng hiện tại
+    if (!uid) {
+        console.error('Không tìm thấy người dùng hiện tại.');
+        return; // Nếu không có UID, không tiếp tục
     }
+    console.log('Đang đăng xuất cho UID:', uid); // Kiểm tra UID
+
+    try {
+        await logUserLogout(uid); // Ghi log thời gian đăng xuất
+        await setUserOfflineStatus(uid); // Cập nhật trạng thái offline
+        await signOut(auth); // Đăng xuất
+        console.log('Đăng xuất thành công cho UID:', uid); // Thông báo thành công
+        navigate('/login'); // Chuyển hướng đến trang đăng nhập
+    } catch (error) {
+        console.error('Đăng xuất thất bại:', error);
+        // Bạn có thể thông báo cho người dùng về lỗi này ở đây nếu cần
+    }
+};
+
+
+
+useEffect(() => {
+  const handleUserLogin = async () => {
+      if (userId) {
+          console.log('Logging in user with ID:', userId); // Kiểm tra userId
+          await logUserLogin(userId);
+      } else {
+          console.log('User ID is not defined');
+      }
   };
+  handleUserLogin();
+}, [userId]);
+
+
+  useEffect(() => {
+    // Kiểm tra xem người dùng có đăng nhập hay không
+    if (user) {
+      // Ghi nhận trạng thái online của người dùng
+      setUserOnlineStatus(user.uid);
+    }
+  }, [user]); // Chạy lại khi user thay đổi
 
   useEffect(() => {
     const fetchImage = async () => {
