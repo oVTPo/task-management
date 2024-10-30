@@ -555,7 +555,7 @@ const handleAddTask = async () => {
                   onClick={handleFileUploadClick}
                   className="bg-gray-500 text-white p-2 rounded-lg mr-2"
                 >
-                  <faFileExcel/>
+                  <FontAwesomeIcon icon={faFileExcel} className='mr-1'/>
                   Thêm từ .xlsx
                 </button>
                 <button
