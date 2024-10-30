@@ -6,6 +6,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSave, faPrint, faFileExcel } from '@fortawesome/free-solid-svg-icons';
+
 
 import { importTasksFromExcel } from '../../utils/importTasksFromExcel';
 
@@ -552,6 +555,7 @@ const handleAddTask = async () => {
                   onClick={handleFileUploadClick}
                   className="bg-gray-500 text-white p-2 rounded-lg mr-2"
                 >
+                  <faFileExcel/>
                   Thêm từ .xlsx
                 </button>
                 <button
