@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { firestore } from '../../firebase';
 import { collection, getDocs, addDoc, deleteDoc, updateDoc, doc, Timestamp } from 'firebase/firestore';
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
+
+import { importTasksFromExcel } from '../../utils/importTasksFromExcel';
+
 import Popup from '../layout/Popup';
 
 const TaskList = () => {
+  const fileInputRef = useRef(null);
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState(null); // Form để thêm nhiệm vụ mới
   const [editTaskId, setEditTaskId] = useState(null);
@@ -16,7 +21,7 @@ const TaskList = () => {
   const [editMode, setEditMode] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [actionType, setActionType] = useState('');
-  const taskTypes = ['Tất cả','Thiết kế', 'Content', 'Quay/Chụp', 'Xử lý ảnh', 'Kế hoạch', 'Edit video', 'Website'];
+  const taskTypes = ['Tất cả','Thiết kế', 'Content', 'Chụp/Quay', 'Xử lý ảnh', 'Kế hoạch', 'Edit video', 'Website'];
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -49,6 +54,34 @@ const TaskList = () => {
     setActionType(type);
     setIsPopupOpen(!isPopupOpen);
   };
+
+  //Up file .xlsx
+  const handleFileUploadClick = () => {
+    fileInputRef.current.click(); // Mở hộp thoại chọn file
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLoading(true); // Bắt đầu trạng thái loading
+      try {
+        await importTasksFromExcel(file); // Đợi cho đến khi nhập hoàn tất
+        setSuccess(true); // Đặt trạng thái thành công sau khi hoàn tất
+        await fetchTasks(); // Gọi fetchTasks ngay sau khi hoàn tất nhập
+      } catch (error) {
+        console.error('Lỗi khi nhập file:', error);
+        setSuccess(false); // Nếu có lỗi, đảm bảo trạng thái không thành công
+      } finally {
+        setLoading(false); // Kết thúc trạng thái loading
+        setTimeout(() => setSuccess(false), 2000);
+        setTimeout(() => setNewTask(null), 2000);
+      }
+    }
+  };
+  
+  
+  
+  
 
   useEffect(() => {
     const filtered = tasks.filter(task => {
@@ -134,7 +167,6 @@ const handleEditTask = async () => {
       type: editTaskData.type || '',
       deadline: deadlineTimestamp,
       assignedTo: editTaskData.assignedTo || '',
-      
     };
 
     // Xóa các trường có giá trị undefined
@@ -196,8 +228,10 @@ const handleAddTask = async () => {
 
   const handleDeleteTask = async (id) => {
     try {
+      setLoading(true);
       await deleteDoc(doc(firestore, 'tasks', id));
       fetchTasks(); // Cập nhật danh sách nhiệm vụ sau khi xóa
+      setLoading(false);
     } catch (error) {
       console.error("Lỗi khi xoá nhiệm vụ:", error);
     }
@@ -276,8 +310,9 @@ const handleAddTask = async () => {
               setEditMode(false);
               togglePopup('add');
             }}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg items-center"
           >
+            <AddIcon className='mr-1'/>
             Thêm Nhiệm Vụ
           </button>
           <button
@@ -317,96 +352,101 @@ const handleAddTask = async () => {
         </thead>
 
         <tbody>
-        {filteredTasks.length > 0 ? (
-              filteredTasks.map((task, index) => {
-                const deadlineDate = task.deadline ? new Date(task.deadline.seconds * 1000) : null;
-                return (
-                  <tr key={task.id} className={`hover:bg-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="px-4 py-6">{task.name}</td>
-                    <td className="py-4 px-6">{task.type}</td>
-                    <td className="py-4 px-6">{task.description}</td>
-                    <td className="py-4 px-6 text-center">{usersMap[task.assignedTo]}</td>
-                    <td className="py-4 px-6 text-center">
-                      {task.deadline ? (
-                        new Date(task.deadline).toLocaleString('vi-VN', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })
-                      ) : (
-                        '--'
-                      )}
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      <span className={`px-2 py-1 rounded-full font-semibold text-sm ${
-                        task.status === 'Mới'
-                          ? 'bg-yellow-200 text-yellow-700'
-                          : task.status === 'Hoàn Thành'
-                          ? 'bg-green-200 text-green-700'
-                          : task.status === 'Sửa lại'
-                          ? 'bg-red-700 text-white'
-                          : ''
-                      }`}>
-                        {task.status}
-                      </span>
-                    </td>
-                    <td className=" px-4 py-2 text-center">
-                      <span className={`px-2 py-1 rounded-full font-semibold text-sm ${
-                        task.progressStatus === 'Trễ tiến độ'
-                          ? 'bg-red-200 text-red-700'
-                          : task.progressStatus === 'Đúng tiến độ'
-                          ? 'bg-green-200 text-green-700'
-                          : task.progressStatus === '--' // Handle '--' status
-                          ? 'bg-gray-200 text-gray-700'
-                          : ''
-                      }`}>
-                        {task.progressStatus}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                        {task.productLink ? (
-                          <span className="px-2 py-1 rounded-full font-semibold text-sm bg-blue-200 text-blue-700">
-                            <a href={task.productLink} target="_blank" rel="noopener noreferrer">Xem</a>
-                          </span>
-                        ) : (
-                          '--'
-                        )}
-                      </td>
-                      {editMode && (
-                        <td className="py-4 px-6 flex space-x-2 text-center">
-                          <span
-                            onClick={() => {
-                              setEditTaskId(task.id);
-                              setEditTaskData({
-                                name: task.name,
-                                description: task.description,
-                                type: task.type,
-                                deadline: task.deadline,
-                              });
-                              togglePopup('edit');
-                            }}
-                            className="cursor-pointer px-2 py-1 font-semibold text-sm text-blue-700 hover:underline"
-                          >
-                            Chỉnh Sửa
-                          </span>
-                          <span
-                            onClick={() => handleDeleteTask(task.id)}
-                            className="cursor-pointer px-2 py-1 font-semibold text-sm text-red-700 hover:underline"
-                          >
-                            Xoá
-                          </span>
-                        </td>
-                      )}
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="8" className="px-4 py-2 text-center">Không có nhiệm vụ nào được giao.</td>
+        {loading ? (
+          <tr>
+            <td colSpan="8" className="px-4 py-2 text-center">Đang tải dữ liệu...</td>
+          </tr>
+        ) : filteredTasks.length > 0 ? (
+          filteredTasks.map((task, index) => {
+            const deadlineDate = task.deadline ? new Date(task.deadline.seconds * 1000) : null;
+            return (
+              <tr key={task.id} className={`hover:bg-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                <td className="px-4 py-6">{task.name}</td>
+                <td className="py-4 px-6">{task.type}</td>
+                <td className="py-4 px-6">{task.description}</td>
+                <td className="py-4 px-6 text-center">{usersMap[task.assignedTo]}</td>
+                <td className="py-4 px-6 text-center">
+                  {task.deadline ? (
+                    new Date(task.deadline).toLocaleString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })
+                  ) : (
+                    '--'
+                  )}
+                </td>
+                <td className="py-4 px-6 text-center">
+                  <span className={`px-2 py-1 rounded-full font-semibold text-sm ${
+                    task.status === 'Mới'
+                      ? 'bg-yellow-200 text-yellow-700'
+                      : task.status === 'Hoàn Thành'
+                      ? 'bg-green-200 text-green-700'
+                      : task.status === 'Sửa lại'
+                      ? 'bg-red-700 text-white'
+                      : ''
+                  }`}>
+                    {task.status}
+                  </span>
+                </td>
+                <td className="px-4 py-2 text-center">
+                  <span className={`px-2 py-1 rounded-full font-semibold text-sm ${
+                    task.progressStatus === 'Trễ tiến độ'
+                      ? 'bg-red-200 text-red-700'
+                      : task.progressStatus === 'Đúng tiến độ'
+                      ? 'bg-green-200 text-green-700'
+                      : task.progressStatus === '--'
+                      ? 'bg-gray-200 text-gray-700'
+                      : ''
+                  }`}>
+                    {task.progressStatus}
+                  </span>
+                </td>
+                <td className="py-4 px-6 text-center">
+                  {task.productLink ? (
+                    <span className="px-2 py-1 rounded-full font-semibold text-sm bg-blue-200 text-blue-700">
+                      <a href={task.productLink} target="_blank" rel="noopener noreferrer">Xem</a>
+                    </span>
+                  ) : (
+                    '--'
+                  )}
+                </td>
+                {editMode && (
+                  <td className="py-4 px-6 flex space-x-2 text-center items-center">
+                    <span
+                      onClick={() => {
+                        setEditTaskId(task.id);
+                        setEditTaskData({
+                          name: task.name,
+                          description: task.description,
+                          type: task.type,
+                          deadline: task.deadline,
+                        });
+                        togglePopup('edit');
+                      }}
+                      className="cursor-pointer px-2 py-1 font-semibold text-sm text-blue-700 hover:underline"
+                    >
+                      Chỉnh Sửa
+                    </span>
+                    <span
+                      onClick={() => handleDeleteTask(task.id)}
+                      className="cursor-pointer px-2 py-1 font-semibold text-sm text-red-700 hover:underline"
+                    >
+                      Xoá
+                    </span>
+                  </td>
+                )}
               </tr>
-            )}
+            );
+          })
+        ) : (
+          <tr>
+            <td colSpan="8" className="px-4 py-2 text-center">Không có nhiệm vụ nào được giao.</td>
+          </tr>
+        )}
+
         </tbody>
       </table>
 
@@ -500,6 +540,20 @@ const handleAddTask = async () => {
                 <button type="button" onClick={togglePopup} className="bg-gray-500 text-white p-2 rounded-lg mr-2">
                   Hủy
                 </button>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }} // Ẩn input file
+                />
+                <button
+                  type="button"
+                  onClick={handleFileUploadClick}
+                  className="bg-gray-500 text-white p-2 rounded-lg mr-2"
+                >
+                  Thêm từ .xlsx
+                </button>
                 <button
                   onClick={handleAddTask}
                   disabled={loading || success}
@@ -568,17 +622,29 @@ const handleAddTask = async () => {
               />
             </div>
             <div className='justify-between flex mb-4'>
-              <select
+            <select
                 value={editTaskData.assignedTo || ''}
                 onChange={e => setEditTaskData({ ...editTaskData, assignedTo: e.target.value })}
                 className="border p-2 rounded-lg mr-4 w-full"
               >
-                {Object.entries(usersMap).map(([id, name]) => (
+                <option value="" disabled>Chọn người dùng</option>
+                {usersMap && Object.entries(usersMap).map(([id, name]) => (
                   <option key={id} value={id}>
                     {name}
                   </option>
                 ))}
-              </select>
+            </select>   
+              <select
+                  value={editTaskData.type}
+                  onChange={e => setEditTaskData({ ...editTaskData, type: e.target.value })}
+                  className="border p-2 mr-4 rounded-lg flex-grow"
+                >
+                  {taskTypes.map(type => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
               <select
               value={editTaskData.status || ''}
               onChange={e => setEditTaskData({ ...editTaskData, status: e.target.value })}
