@@ -1,8 +1,37 @@
-// utils/importTasksFromExcel.js
-
 import * as XLSX from 'xlsx';
 import { db } from '../firebase';
 import { Timestamp, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+
+// Hàm phân tích định dạng ngày giờ
+const parseDate = (dateString) => {
+  // Kiểm tra xem dateString có phải là chuỗi không
+  if (typeof dateString !== 'string') {
+    console.warn(`Giá trị không hợp lệ cho deadline: ${dateString}`);
+    return null; // Trả về null nếu không phải chuỗi
+  }
+
+  // Sử dụng RegEx để phân tích chuỗi ngày giờ
+  const regex = /(\d{2})\/(\d{2})\/(\d{4}) (\d{1,2}):(\d{2}):(\d{2})/; // Định dạng dd/MM/yyyy HH:mm:ss
+  const match = dateString.match(regex);
+  
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1; // Tháng 0-11
+    const year = parseInt(match[3], 10);
+    const hours = parseInt(match[4], 10);
+    const minutes = parseInt(match[5], 10);
+    const seconds = parseInt(match[6], 10);
+    
+    // Tạo đối tượng Date
+    const date = new Date(year, month, day, hours, minutes, seconds);
+    
+    // Chuyển đổi sang Timestamp của Firestore
+    return Timestamp.fromDate(date);
+  }
+
+  console.warn(`Không thể phân tích ngày giờ từ chuỗi: ${dateString}`); // Ghi nhận nếu không phân tích được
+  return null; // Trả về null nếu không thể phân tích
+};
 
 export const importTasksFromExcel = async (file) => {
   if (!file) {
@@ -40,7 +69,7 @@ export const importTasksFromExcel = async (file) => {
             assignedTo: assignedToUid,
             type: task.type || '',
             description: task.description || '',
-            deadline: task.deadline ? Timestamp.fromDate(new Date(task.deadline)) : null,
+            deadline: parseDate(task.deadline) || null, // Sử dụng hàm parseDate
             status: task.status || 'Mới',
           };
 

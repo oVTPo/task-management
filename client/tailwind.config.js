@@ -19,6 +19,7 @@ module.exports = {
           800: '#002D8A',      // Màu sắc độ 800
           900: '#001A66',      // Màu sắc độ 900 (tối nhất)
         },
+        excel: '#1e6e42',
       },
       height: {
         '112': '28rem', // Chiều cao giữa 96 và 128

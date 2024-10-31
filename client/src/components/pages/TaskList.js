@@ -157,10 +157,13 @@ useEffect(() => {
 const handleEditTask = async () => {
   setLoading(true);
   setSuccess(false);
+  
   try {
     const taskDoc = doc(firestore, 'tasks', editTaskId);
+
+    // Chuyển đổi giá trị deadline từ input thành timestamp
     const deadlineTimestamp = editTaskData.deadline
-      ? Timestamp.fromDate(new Date(editTaskData.deadline + 'Z'))
+      ? Timestamp.fromDate(new Date(editTaskData.deadline))
       : null;
 
     const updatedData = {
@@ -171,6 +174,7 @@ const handleEditTask = async () => {
       deadline: deadlineTimestamp,
       assignedTo: editTaskData.assignedTo || '',
     };
+
 
     // Xóa các trường có giá trị undefined
     Object.keys(updatedData).forEach(key => {
@@ -195,6 +199,9 @@ const handleEditTask = async () => {
     setLoading(false);
   }
 };
+
+
+
 
 const handleAddTask = async () => {
   setLoading(true);
@@ -425,7 +432,9 @@ const handleAddTask = async () => {
                           name: task.name,
                           description: task.description,
                           type: task.type,
-                          deadline: task.deadline,
+                          deadline: task.deadline instanceof Timestamp 
+                            ? new Date(task.deadline.toMillis()).toISOString().slice(0, 16) 
+                            : '', // Nếu không phải là Timestamp, bạn có thể để là rỗng hoặc xử lý phù hợp
                         });
                         togglePopup('edit');
                       }}
@@ -659,11 +668,14 @@ const handleAddTask = async () => {
               <option value="Sửa lại">Sửa lại</option>
             </select>
             <input
-              type="datetime-local"
-              value={editTaskData.deadline ? new Date(editTaskData.deadline).toISOString().slice(0, 16) : ""}
-              onChange={(e) => setEditTaskData({ ...editTaskData, deadline: e.target.value })}
-              className="border p-2 rounded-lg"
-            />
+                type="datetime-local"
+                value={editTaskData.deadline || ''} // Đảm bảo giá trị không phải là undefined
+                onChange={(e) => setEditTaskData({ 
+                  ...editTaskData, 
+                  deadline: e.target.value // Cập nhật giá trị deadline từ input
+                })}
+                className="border p-2 rounded-lg"
+              />
             </div>
             <textarea
               placeholder="Mô tả nhiệm vụ"
