@@ -46,12 +46,27 @@ const AdminLayout = () => {
 };
 
 useEffect(() => {
+  const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = "Bạn có chắc chắn muốn rời khỏi trang?";
+  };
+
+  // Gán sự kiện
+  window.addEventListener("beforeunload", handleBeforeUnload);
+
+  // Cleanup listener khi component unmount
+  return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+  };
+}, []); // Chạy effect một lần khi component mount
+
+
+useEffect(() => {
   const handleUserLogin = async () => {
       if (userId) {
-          console.log('Logging in user with ID:', userId); // Kiểm tra userId
           await logUserLogin(userId);
       } else {
-          console.log('User ID is not defined');
+
       }
   };
   handleUserLogin();
