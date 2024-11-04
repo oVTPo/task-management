@@ -25,24 +25,23 @@ const TaskList = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [actionType, setActionType] = useState('');
   const taskTypes = ['Tất cả','Thiết kế', 'Content', 'Chụp/Quay', 'Xử lý ảnh', 'Kế hoạch', 'Edit video', 'Website'];
-
+  const [filteredTasks, setFilteredTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const tasksPerPage = 10;
+  const tasksPerPage = 8;
 
   // Tính toán chỉ số đầu và cuối của nhiệm vụ hiện tại
   const indexOfLastTask = currentPage * tasksPerPage;
   const indexOfFirstTask = indexOfLastTask - tasksPerPage;
-  const currentTasks = tasks.slice(indexOfFirstTask, indexOfLastTask);
+  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
   const [sortOrder, setSortOrder] = useState('desc');
   
   // Tổng số trang
   const totalPages = Math.ceil(tasks.length / tasksPerPage);
 
   //Lọc
-  const [filteredTasks, setFilteredTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -366,8 +365,8 @@ const handleAddTask = async () => {
           <tr>
             <td colSpan="8" className="px-4 py-2 text-center">Đang tải dữ liệu...</td>
           </tr>
-        ) : filteredTasks.length > 0 ? (
-          filteredTasks.map((task, index) => {
+        ) : currentTasks.length > 0 ? (
+          currentTasks.map((task, index) => {
             const deadlineDate = task.deadline ? new Date(task.deadline.seconds * 1000) : null;
             return (
               <tr key={task.id} className={`hover:bg-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>

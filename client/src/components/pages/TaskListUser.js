@@ -16,10 +16,10 @@ const TaskListUser = ({ userId }) => {
   const taskTypes = ['Tất cả','Thiết kế', 'Content', 'Quay/Chụp', 'Xử lý ảnh', 'Kế hoạch', 'Edit video', 'Website'];
 
   const [currentPage, setCurrentPage] = useState(1);
-  const tasksPerPage = 10;
+  const tasksPerPage = 8;
   const indexOfLastTask = currentPage * tasksPerPage;
   const indexOfFirstTask = indexOfLastTask - tasksPerPage;
-  const currentTasks = tasks.slice(indexOfFirstTask, indexOfLastTask);
+  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
   const [sortOrder, setSortOrder] = useState('desc');
 
   const [statusFilter, setStatusFilter] = useState('Tất cả');
@@ -51,29 +51,22 @@ const TaskListUser = ({ userId }) => {
       const tasksCollection = collection(firestore, 'tasks');
       const q = query(tasksCollection, where("assignedTo", "==", userId));
       const tasksSnapshot = await getDocs(q);
-      const tasksList = tasksSnapshot.docs.map(async (docSnapshot) => {
+      
+      const tasksList = tasksSnapshot.docs.map((docSnapshot) => {
         const taskData = { id: docSnapshot.id, ...docSnapshot.data() };
-        const taskDocRef = doc(firestore, 'tasks', docSnapshot.id);
-
-        const currentDate = new Date();
-        const deadlineDate = taskData.deadline ? new Date(taskData.deadline.seconds * 1000) : null;
-
-        if (!taskData.productLink) {
-          taskData.progressStatus = '--';
-        } else if (deadlineDate && currentDate > deadlineDate) {
-          taskData.progressStatus = 'Trễ tiến độ';
-        } else {
-          taskData.progressStatus = 'Đúng tiến độ';
-        }
+        
+        // Kiểm tra nếu progressStatus trống, hiển thị "--"
+        taskData.progressStatus = taskData.progressStatus || '--';
+        
         return taskData;
       });
-
-      const resolvedTasksList = await Promise.all(tasksList);
-      setTasks(resolvedTasksList);
+  
+      setTasks(tasksList);
     } catch (error) {
       console.error("Error fetching tasks:", error);
     }
   };
+  
 
   useEffect(() => {
     fetchTasks();
@@ -166,8 +159,8 @@ const TaskListUser = ({ userId }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredTasks.length > 0 ? (
-              filteredTasks.map((task, index) => {
+            {currentTasks.length > 0 ? (
+              currentTasks.map((task, index) => {
                 const deadlineDate = task.deadline ? new Date(task.deadline.seconds * 1000) : null;
                 return (
                   <tr key={task.id} onClick={() => handleShowDetails(task)} className={`hover:bg-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
