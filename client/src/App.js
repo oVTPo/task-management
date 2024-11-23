@@ -13,7 +13,7 @@ import CreateTask from './components/pages/CreateTask';
 import TaskList from './components/pages/TaskList';
 import TaskListUser from './components/pages/TaskListUser';
 import Team from './components/pages/Team';
-import Calendar from './components/pages/Calendar';
+import TaskCalendarUser from './components/pages/TaskCalendarUser';
 import UserDashboard from './components/pages/UserDashboard';
 import UserReports from './components/pages/UserReports';
 
@@ -64,7 +64,7 @@ function App() {
          }
         >
           <Route path="task-list" element={<TaskListUser userId={userId} />} />
-          <Route path="calendar" element={<TaskCalendar />} />
+          <Route path="calendar" element={<TaskCalendarUser userId={userId}/>} />
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="notifications" element={<Notification />} />
           <Route path="reports" element={<UserReports />} />
@@ -84,7 +84,7 @@ function App() {
           <Route path="create-task" element={<CreateTask />} />
           <Route path="task-list" element={<TaskList />} />
           <Route path="team" element={<Team />} />
-          <Route path="calendar" element={<Calendar />} />
+          <Route path="calendar" element={<TaskCalendar />} />
           <Route path="reports" element={<Reports />} />
           {/* Bạn có thể thêm các route khác tại đây */}
         </Route>

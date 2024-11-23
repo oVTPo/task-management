@@ -152,7 +152,7 @@ useEffect(() => {
                 }
               >
                 <CalendarMonthIcon />
-                <span>Lịch đăng bài</span>
+                <span>Lịch trình công việc</span>
               </NavLink>
             </li>
             <li>

@@ -1,19 +1,97 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react';
+import { db } from '../../firebase';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import listPlugin from '@fullcalendar/list';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import viLocale from '@fullcalendar/core/locales/vi'; // Import ngôn ngữ tiếng Việt
 
 const TaskCalendar = () => {
-  return (
-    <div className="h-full flex flex-col items-center justify-center text-white">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-            <h1 className="text-3xl font-bold mb-4 text-blue-500">Sắp ra mắt tính năng mới</h1>
-            <p className="text-lg text-gray-700 mb-6">
-            Chúng tôi đang phát triển các tính năng mới, hãy quay lại sớm để khám phá nhé!
-            </p>
-            <div className="flex justify-center">
-            <div class="w-8 h-8 border-4 border-blue-400 border-dashed rounded-full animate-spin"></div>
-            </div>
-        </div>
-    </div>
-  )
-}
+  const [events, setEvents] = useState([]);
 
-export default TaskCalendar
+  // Lấy tên người dùng từ UID
+  const getUserName = async (uid) => {
+    const userRef = doc(db, 'users', uid); 
+    const userDoc = await getDoc(userRef);
+    return userDoc.exists() ? userDoc.data().name : 'Không có tên';
+  };
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'tasks'));
+        const taskPromises = querySnapshot.docs.map(async (docSnapshot) => {
+          const data = docSnapshot.data();
+          
+          const userName = await getUserName(data.assignedTo); // Lấy tên người giao nhiệm vụ
+          const formattedDate = new Date(data.deadline.seconds * 1000); // Định dạng ngày deadline
+          const taskName = data.name || 'Không có tên nhiệm vụ'; // Lấy tên nhiệm vụ
+          const formattedTime = formattedDate.toLocaleTimeString(); // Định dạng giờ
+          const status = data.status || 'Chưa có trạng thái'; // Lấy trạng thái nhiệm vụ
+
+          return {
+            title: `${taskName} - ${userName}`,  // Tiêu đề chứa tên nhiệm vụ và người thực hiện
+            start: formattedDate.toISOString(),
+            extendedProps: {
+              taskName,
+              userName,
+              time: formattedTime,
+              status, // Truyền trạng thái vào extendedProps
+            },
+          };
+        });
+
+        const tasks = await Promise.all(taskPromises);
+        setEvents(tasks);
+      } catch (error) {
+        console.error('Lỗi khi tải dữ liệu:', error);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
+  return (
+    <div className="p-8 bg-gray-100">
+      <div className="bg-white shadow-lg rounded-lg p-6 mb-6">
+        <FullCalendar
+          plugins={[dayGridPlugin, listPlugin, timeGridPlugin]} // Giữ lại các plugin cần thiết
+          initialView="dayGridMonth" // Chế độ xem mặc định là lịch tháng
+          locale="vi" // Ngôn ngữ tiếng Việt
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listMonth', // Chỉ giữ lại 3 chế độ này
+          }}
+          events={events}
+          eventContent={(eventInfo) => {
+            const { taskName, userName, time, status } = eventInfo.event.extendedProps;
+            
+            // Đặt màu nền và màu chữ dựa trên trạng thái
+            const taskCardClass = status === 'Hoàn Thành' ? 'bg-green-200' : 'bg-gray-50';
+            const titleTextClass = status === 'Hoàn Thành' ? 'text-green-600' : 'text-blue-600';
+
+            const truncatedTaskName = taskName.length > 28 ? taskName.slice(0, 20) + "..." : taskName;
+            return (
+              <div className={`flex flex-col p-2 space-y-1 border-2 rounded-lg shadow-md ${taskCardClass}`}>
+                <div className={`font-semibold text-md ${titleTextClass}`}>{truncatedTaskName}</div>
+                <div className="text-sm text-gray-700">{userName}</div>
+                <div className="text-sm text-gray-500">{time}</div>
+              </div>
+            );
+          }}
+          buttonText={{
+            today: 'Hôm nay',
+            month: 'Tháng',
+            week: 'Tuần',
+            day: 'Ngày',
+            listMonth: 'Danh sách',
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default TaskCalendar;
