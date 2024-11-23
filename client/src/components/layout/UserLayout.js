@@ -20,7 +20,6 @@ import LogoutIcon from '@mui/icons-material/Logout';
 
 const UserLayout = () => {
   const userId = auth.currentUser ? auth.currentUser.uid : null;
-  useSingleSession(userId);
 
   const user = auth.currentUser;
   const navigate = useNavigate();
@@ -50,20 +49,6 @@ const handleLogout = async () => {
     }
 };
 
-useEffect(() => {
-  const handleBeforeUnload = (event) => {
-      event.preventDefault();
-      event.returnValue = "Bạn có chắc chắn muốn rời khỏi trang?";
-  };
-
-  // Gán sự kiện
-  window.addEventListener("beforeunload", handleBeforeUnload);
-
-  // Cleanup listener khi component unmount
-  return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-  };
-}, []); // Chạy effect một lần khi component mount
 
 useEffect(() => {
   const handleUserLogin = async () => {
