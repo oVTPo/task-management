@@ -75,7 +75,7 @@ const TaskCalendar = () => {
   }
 
   return (
-    <div className="p-8 bg-gray-100">
+    <div className=" bg-gray-100">
       <div className="bg-white shadow-lg rounded-lg p-6 mb-6">
         <FullCalendar
           plugins={[dayGridPlugin, listPlugin]}

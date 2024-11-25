@@ -38,9 +38,9 @@ const LoginPage = () => {
         if (userData.requiresPasswordChange) {
           navigate("/setPassword");
         } else if (userData.role === "admin") {
-          navigate("/admin");
+          navigate("/admin/dashboard");
         } else {
-          navigate("/user");
+          navigate("/user/dashboard");
         }
       }
     } catch (error) {
