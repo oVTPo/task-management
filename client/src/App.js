@@ -25,6 +25,7 @@ import Notification from './components/pages/Notifications';
 
 import { setUserOnlineStatus } from './utils/userStatus'; // Import hàm cập nhật trạng thái online
 import FirstLogin from './components/FirstLogin';
+import WorkSchedule from './components/pages/WorkSchedule';
 
 function App() {
   const [userId, setUserId] = useState(null); // Tạo state để lưu trữ userId
@@ -68,6 +69,7 @@ function App() {
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="notifications" element={<Notification />} />
           <Route path="reports" element={<UserReports />} />
+          <Route path="work-schedule" element={<WorkSchedule />} />
         </Route>
 
         {/* Route cần bảo vệ cho admin */}

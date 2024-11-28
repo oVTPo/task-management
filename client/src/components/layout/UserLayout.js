@@ -17,6 +17,8 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import LogoutIcon from '@mui/icons-material/Logout';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faAngleRight, faList, faHardDrive} from '@fortawesome/free-solid-svg-icons';
 
 const UserLayout = () => {
   const userId = auth.currentUser ? auth.currentUser.uid : null;
@@ -28,6 +30,13 @@ const UserLayout = () => {
   const imageName = "IconNG.png";
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0); // Track unread count
+
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
 
 const handleLogout = async () => {
     const uid = auth.currentUser ? auth.currentUser.uid : null; // Lấy UID của người dùng hiện tại
@@ -131,7 +140,7 @@ useEffect(() => {
   return (
     <div className="flex min-h-screen bg-white-900 overflow-hidden">
       {/* Sidebar */}
-      <nav className="w-64 bg-white flex flex-col h-screen drop-shadow-2xl">
+      <nav className="w-68 bg-white flex flex-col h-screen drop-shadow-2xl">
         <div className="p-6 flex-grow">
           <div className="flex items-center mb-12">
             {imageURL ? (
@@ -150,7 +159,7 @@ useEffect(() => {
                 to="/user/dashboard"
                 className={({ isActive }) =>
                   `flex items-center space-x-3 font-semibold p-2 rounded-md ${
-                    isActive ? 'text-primary bg-primary-50' : 'text-gray-500'
+                    isActive ? 'text-primary bg-primary-50' : 'text-gray-400'
                   }`
                 }
               >
@@ -164,7 +173,7 @@ useEffect(() => {
                 onClick={handleNotificationClick} // Handle click to mark as read
                 className={({ isActive }) =>
                   `flex items-center space-x-3 font-semibold p-2 rounded-md ${
-                    isActive ? 'text-primary bg-primary-50' : 'text-gray-500'
+                    isActive ? 'text-primary bg-primary-50' : 'text-gray-400'
                   }`
                 }
               >
@@ -182,7 +191,7 @@ useEffect(() => {
                 to="/user/calendar"
                 className={({ isActive }) =>
                   `flex items-center space-x-3 font-semibold p-2 rounded-md ${
-                    isActive ? 'text-primary bg-primary-50' : 'text-gray-500'
+                    isActive ? 'text-primary bg-primary-50' : 'text-gray-400'
                   }`
                 }
               >
@@ -195,7 +204,7 @@ useEffect(() => {
                 to="/user/task-list"
                 className={({ isActive }) =>
                   `flex items-center space-x-3 font-semibold p-2 rounded-md ${
-                    isActive ? 'text-primary bg-primary-50' : 'text-gray-500'
+                    isActive ? 'text-primary bg-primary-50' : 'text-gray-400'
                   }`
                 }
               >
@@ -208,13 +217,66 @@ useEffect(() => {
                 to="/user/reports"
                 className={({ isActive }) =>
                   `flex items-center space-x-3 font-semibold p-2 rounded-md ${
-                    isActive ? 'text-primary bg-primary-50' : 'text-gray-500'
+                    isActive ? 'text-primary bg-primary-50' : 'text-gray-400'
                   }`
                 }
               >
                 <BarChartIcon />
                 <span>Thống kê</span>
               </NavLink>
+            </li>
+            <hr className="border-gray-400" />
+            <h1 className='text-sm text-gray-400 font-semibold'>SHORTCUTS</h1>
+            <li>
+              <NavLink
+                to="https://drive.google.com/drive/folders/1MtU86auoYMdBiYCEtNJXaCRoSif9P7l5?usp=drive_link"
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 font-semibold p-2 rounded-md ${
+                    isActive ? 'text-primary bg-primary-50' : 'text-gray-400'
+                  }`
+                }
+              >
+                <FontAwesomeIcon icon={faHardDrive} />    
+                <span>Drive công ty</span>
+              </NavLink>
+            </li>
+            <li className="relative">
+              {/* Main NavLink */}
+              <button
+                onClick={toggleDropdown}
+                className="flex items-center space-x-3 font-semibold p-2 rounded-md text-gray-400 hover:text-primary hover:bg-primary-50 focus:outline-none"
+              >
+                <FontAwesomeIcon icon={faList} />
+                <span>Qui định & Đăng ký</span>
+                <FontAwesomeIcon icon={faAngleRight} />
+              </button>
+
+              {/* Dropdown */}
+              {isOpen && (
+                <div className="absolute left-full top-0 bg-white shadow-md rounded-md mt-1 w-40 z-10 text-gray-400 font-semibold p-4">
+                  <ul className="text-gray-600">
+                  <h1 className='text-sm text-gray-400 font-semibold mb-2'>Đăng ký</h1>
+                    <li>
+                      <NavLink
+                        to="/user/work-schedule"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                      >
+                        Giờ làm việc
+                      </NavLink>
+                    </li>
+                    <hr className="border-gray-400 my-2" /> 
+                    <h1 className='text-sm text-gray-400 font-semibold mb-4'>Qui định</h1> 
+                    <li>
+                      <NavLink
+                        to="https://docs.google.com/document/d/e/2PACX-1vQimLDLEBDCegPx7bboqBAh0rs1tXQyGW6D1n7VAZF3PzyrO3d6arHGDql0HvP4cHGc2fPNOOpyjsvZ/pub"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                      >
+                        KPI và lương
+                      </NavLink>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </li>
           </ul>
         </div>
