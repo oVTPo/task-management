@@ -18,38 +18,39 @@ const WorkSchedule = () => {
   const loadScheduleFromFirestore = async () => {
     const auth = getAuth();
     const user = auth.currentUser;
-
+  
     if (!user) {
       alert("Bạn cần đăng nhập để xem lịch làm việc.");
       return;
     }
-
+  
     const userId = user.uid;
     const db = getFirestore();
-
+  
     try {
       const docRef = doc(db, `users/${userId}/workSchedules/${weekStart}`);
       const docSnap = await getDoc(docRef);
-
+  
       if (docSnap.exists()) {
         const scheduleData = docSnap.data();
         const eventsData = [];
-
+  
         for (const date in scheduleData.days) {
           scheduleData.days[date].forEach((timeSlot) => {
             const startDate = new Date(`${date}T${timeSlot.start}`);
             const endDate = new Date(`${date}T${timeSlot.end}`);
-
+  
             eventsData.push({
-              id: `${date}-${timeSlot.start}-${timeSlot.end}`, // ID duy nhất dựa trên thời gian
+              id: `${date}-${timeSlot.start}-${timeSlot.end}`,
               start: startDate.toISOString(),
               end: endDate.toISOString(),
               allDay: false,
+              status: timeSlot.status || "offline", // Thêm trạng thái
             });
           });
         }
-
-        setEvents(eventsData); // Cập nhật trạng thái chính
+  
+        setEvents(eventsData);
       } else {
         console.log("Không tìm thấy lịch làm việc cho tuần này.");
       }
@@ -57,6 +58,7 @@ const WorkSchedule = () => {
       console.error("Lỗi khi tải lịch:", error.message);
     }
   };
+  
 
   useEffect(() => {
     if (weekStart) {
@@ -79,7 +81,6 @@ const WorkSchedule = () => {
   const handleDateSelect = (selectInfo) => {
     const { start, end } = selectInfo;
   
-    // Hiển thị prompt chọn trạng thái
     const status = window.prompt(
       "Nhập trạng thái (offline/online):",
       "offline"
@@ -95,12 +96,13 @@ const WorkSchedule = () => {
       start: start.toISOString(),
       end: end.toISOString(),
       allDay: false,
-      status, // Gán trạng thái vào sự kiện
+      status,
     };
   
     setEvents((prev) => [...prev, newEvent]);
     selectInfo.view.calendar.unselect();
   };
+  
   
 
   // Xóa sự kiện
@@ -194,6 +196,7 @@ const WorkSchedule = () => {
       schedule[date].push({
         start: localStart,
         end: localEnd,
+        status: event.status,
       });
     });
 
@@ -219,45 +222,52 @@ const WorkSchedule = () => {
             <p className="font-bold"> Lưu ý: khi bạn thực hiện thêm, sửa hoặc xoá thời gian thì hãy bấm lưu để thay đổi</p>
           </div>
         </div>
+      </div>
+      <div className="h-auto">
+        <FullCalendar
+          plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
+          initialView="timeGridWeek"
+          editable={true}
+          selectable={true}
+          events={events}
+          select={handleDateSelect}
+          eventClick={handleEventClick}
+          eventDrop={handleEventDrop}
+          eventResize={handleEventResize}
+          datesSet={handleDatesSet}
+          allDaySlot={false} // Loại bỏ ô "All Day"
+          slotMinTime="06:00:00" // Giờ bắt đầu trong ngày
+          slotMaxTime="22:00:00" // Giờ kết thúc trong ngày
+          locale="vi"
+          buttonText={{
+            today: "Hôm nay",
+            next: "Sau",
+            prev: "Trước",
+          }}
+          eventContent={(arg) => {
+            // Tùy chỉnh nội dung thẻ sự kiện
+            const status = arg.event.extendedProps.status; // Lấy trạng thái
+            return (
+              <div className="flex flex-col p-4">
+                <span className={` font-semibold text-lg ${status === "online" ? "text-yellow-800" : "text-primary-800"}`}>
+                  {status === "online" ? "Online" : "Offline"}
+                </span>
+                <span className="font-semibold text-gray-500">{arg.timeText}</span>
+              </div>
+            );
+          }}
+          eventClassNames={(arg) => {
+            if (arg.event.extendedProps.status === "offline") {
+              return "bg-primary-200 text-primary";
+            } else if (arg.event.extendedProps.status === "online") {
+              return "bg-yellow-200 text-white";
+            }
+            return "";
+          }}
+          height="auto"  // Tự động điều chỉnh chiều cao
+          contentHeight="auto" // Đảm bảo phần nội dung tự động thay đổi chiều cao
+        />
       </div>  
-      <FullCalendar
-        plugins={[timeGridPlugin, interactionPlugin, dayGridPlugin]}
-        initialView="timeGridWeek"
-        editable={true}
-        selectable={true}
-        events={events}
-        select={handleDateSelect}
-        eventClick={handleEventClick}
-        eventDrop={handleEventDrop}
-        eventResize={handleEventResize}
-        datesSet={handleDatesSet}
-        locale="vi"
-        buttonText={{
-          today: "Hôm nay",
-          next: "Sau",
-          prev: "Trước",
-        }}
-        eventContent={(arg) => {
-          // Tùy chỉnh nội dung thẻ sự kiện
-          const status = arg.event.extendedProps.status; // Lấy trạng thái
-          return (
-            <div className="flex flex-col p-4">
-              <span className={` font-semibold ${status === "online" ? "text-yellow-800" : "text-primary-800"}`}>
-                {status === "online" ? "Online" : "Offline"}
-              </span>
-              <span className="font-semibold">{arg.timeText}</span>
-            </div>
-          );
-        }}
-        eventClassNames={(arg) => {
-          if (arg.event.extendedProps.status === "offline") {
-            return "bg-primary text-white";
-          } else if (arg.event.extendedProps.status === "online") {
-            return "bg-yellow-400 text-white";
-          }
-          return "";
-        }}
-      />
     </div>
   );
 };
