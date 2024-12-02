@@ -7,7 +7,7 @@ import listPlugin from '@fullcalendar/list';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import viLocale from '@fullcalendar/core/locales/vi'; // Import ngôn ngữ tiếng Việt
 
-const TaskCalendar = () => {
+const TaskCalendar = ({ isToday = false }) => { // Nhận isToday từ props
   const [events, setEvents] = useState([]);
 
   // Lấy tên người dùng từ UID
@@ -43,26 +43,34 @@ const TaskCalendar = () => {
         });
 
         const tasks = await Promise.all(taskPromises);
-        setEvents(tasks);
+        
+        // Nếu isToday là true, lọc chỉ lấy sự kiện hôm nay
+        if (isToday) {
+          const today = new Date().toISOString().split('T')[0]; // Lấy ngày hiện tại (YYYY-MM-DD)
+          const todayEvents = tasks.filter(event => event.start.split('T')[0] === today);
+          setEvents(todayEvents);  // Chỉ set các sự kiện của hôm nay
+        } else {
+          setEvents(tasks); // Không lọc, lấy tất cả sự kiện
+        }
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu:', error);
       }
     };
 
     fetchTasks();
-  }, []);
+  }, [isToday]); // Chạy lại mỗi khi isToday thay đổi
 
   return (
-    <div className="p-8 bg-gray-100">
+    <div className=" bg-gray-100">
       <div className="bg-white shadow-lg rounded-lg p-6 mb-6">
         <FullCalendar
           plugins={[dayGridPlugin, listPlugin, timeGridPlugin]} // Giữ lại các plugin cần thiết
-          initialView="dayGridMonth" // Chế độ xem mặc định là lịch tháng
+          initialView="listMonth" // Chế độ xem mặc định là danh sách tháng
           locale="vi" // Ngôn ngữ tiếng Việt
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,listMonth', // Chỉ giữ lại 3 chế độ này
+            right: 'listMonth', // Chỉ hiển thị chế độ "listMonth"
           }}
           events={events}
           eventContent={(eventInfo) => {
