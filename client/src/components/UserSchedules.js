@@ -129,8 +129,8 @@ const UserSchedules = () => {
           end: "resourceTimeGridDay,resourceTimeGridWeek", // Chế độ xem ngày/tuần
         }}
         allDaySlot={false} // Loại bỏ ô "All Day"
-        slotMinTime="06:00:00" // Giờ bắt đầu trong ngày
-        slotMaxTime="22:00:00" // Giờ kết thúc trong ngày
+        slotMinTime="07:00:00" // Giờ bắt đầu trong ngày
+        slotMaxTime="20:00:00" // Giờ kết thúc trong ngày
         locale="vi" // Ngôn ngữ Tiếng Việt
 
 
