@@ -7,6 +7,7 @@ const CreateTask = () => {
     const [taskName, setTaskName] = useState('');
     const [selectedUser, setSelectedUser] = useState('');
 
+
     useEffect(() => {
         const fetchUsers = async () => {
             const usersCollection = collection(firestore, 'users'); // Giả sử bạn có một collection tên là 'users'
@@ -39,7 +40,6 @@ const CreateTask = () => {
             console.error("Lỗi khi tạo nhiệm vụ:", error);
         }
     };
-
 
     return (
         <div>

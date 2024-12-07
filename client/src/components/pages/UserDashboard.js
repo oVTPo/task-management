@@ -87,7 +87,9 @@ const calculateMetrics = () => {
     const userTasks = getUserTasks();
     const totalTasks = userTasks.length;
     const completedTasks = userTasks.filter(task => task.status === "Hoàn Thành").length;
-    const lateTasks = userTasks.filter(task => task.progressStatus === "Trễ tiến độ").length;
+    const lateTasks = userTasks.filter(task => 
+      task.progressStatus === "Trễ <24h" || task.progressStatus === "Trễ >24h" || task.progressStatus === "Trễ tiến độ"
+    ).length;
 
     // Khởi tạo kpi và realKpi tổng
     const { kpi, realKpi } = userTasks.reduce((acc, task) => {
@@ -95,8 +97,11 @@ const calculateMetrics = () => {
         acc.kpi += taskKpi;
 
         if (task.status === "Hoàn Thành") {
-            const progressPoints = task.progressStatus === "Đúng tiến độ" ? taskKpi : taskKpi * 0.5;
-            acc.realKpi += progressPoints;
+          const progressPoints = 
+            task.progressStatus === "Đúng tiến độ" ? taskKpi :
+            task.progressStatus === "Trễ <24h" ? taskKpi * 0.5 :
+            0;
+          acc.realKpi += progressPoints;
         }
 
         return acc;
@@ -245,7 +250,7 @@ const calculateMetrics = () => {
           </div>
           <div>
           <CircleChart 
-              completionPercentage={metrics.latePercentages}
+              completionPercentage={metrics.latePercentage}
               labelComplete="% Trễ"
               labelIncomplete="Đúng tiến độ"
               completeColor="#FF0000"   // Màu xanh lá cho phần hoàn thành

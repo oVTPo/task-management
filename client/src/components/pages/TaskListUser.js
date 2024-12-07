@@ -199,7 +199,11 @@ const TaskListUser = ({ userId }) => {
                     </td>
                     <td className=" px-4 py-2 text-center">
                       <span className={`px-2 py-1 rounded-full font-semibold text-sm ${
-                        task.progressStatus === 'Trễ tiến độ'
+                        task.progressStatus === 'Trễ <24h'
+                          ? 'bg-red-200 text-red-700'
+                          : task.progressStatus === 'Trễ >24h'
+                          ? 'bg-red-200 text-red-700'
+                          : task.progressStatus === 'Trễ tiến độ'
                           ? 'bg-red-200 text-red-700'
                           : task.progressStatus === 'Đúng tiến độ'
                           ? 'bg-green-200 text-green-700'
@@ -243,17 +247,69 @@ const TaskListUser = ({ userId }) => {
           <span>Trang {currentPage} / {totalPages}</span>
         </div>
         <div>
-          {Array.from({ length: totalPages }, (_, index) => (
-            <button
-              key={index + 1}
-              onClick={() => setCurrentPage(index + 1)}
-              className={`px-2 py-1 mx-1 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              {index + 1}
-            </button>
-          ))}
+          {totalPages > 10 ? (
+            <>
+              {/* Hiển thị trang đầu tiên */}
+              <button
+                onClick={() => setCurrentPage(1)}
+                className={`px-2 py-1 mx-1 rounded ${currentPage === 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              >
+                1
+              </button>
+
+              {/* Dấu "..." nếu trang hiện tại lớn hơn 4 */}
+              {currentPage > 4 && <span className="px-2 py-1 mx-1">...</span>}
+
+              {/* Các trang gần trang hiện tại */}
+              {Array.from({ length: 5 }, (_, index) => {
+                let pageNum;
+                if (currentPage <= 3) {
+                  pageNum = index + 2; // Các trang gần trang 1
+                } else if (currentPage >= totalPages - 3) {
+                  pageNum = totalPages - 5 + index; // Các trang gần trang cuối
+                } else {
+                  pageNum = currentPage - 2 + index; // Các trang ở giữa
+                }
+
+                // Đảm bảo không vượt quá số trang hợp lệ
+                pageNum = Math.max(2, Math.min(totalPages - 1, pageNum));
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`px-2 py-1 mx-1 rounded ${currentPage === pageNum ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              {/* Dấu "..." nếu trang hiện tại nhỏ hơn tổng số trang trừ 4 */}
+              {currentPage < totalPages - 4 && <span className="px-2 py-1 mx-1">...</span>}
+
+              {/* Hiển thị trang cuối */}
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                className={`px-2 py-1 mx-1 rounded ${currentPage === totalPages ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              >
+                {totalPages}
+              </button>
+            </>
+          ) : (
+            // Hiển thị tất cả các trang nếu tổng số trang <= 10
+            Array.from({ length: totalPages }, (_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => setCurrentPage(index + 1)}
+                className={`px-2 py-1 mx-1 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              >
+                {index + 1}
+              </button>
+            ))
+          )}
         </div>
       </div>
+
       </div>
       {showDetails && selectedTask && (
         <Popup task={selectedTask} onClose={handleClosePopup} onTaskUpdated={handleTaskUpdated} />

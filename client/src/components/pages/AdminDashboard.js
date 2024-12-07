@@ -16,7 +16,7 @@ const AdminDashboard = () => {
           <UserSchedules/>
         </div>
         <div className='col-span-3 row-span-4'>
-          <TaskCalendar isToday={true}/>
+         <TaskCalendar isToday={false} viewMode="listMonth" showViewButtons={false} />
         </div>
       </div>
     </>

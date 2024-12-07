@@ -7,11 +7,22 @@ import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
 import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
 
+
 const TaskDetails = ({ task, onClose, onTaskUpdated }) => {
   const [productLink, setProductLink] = useState(task.productLink || ''); // Nếu có link trước đó thì hiển thị
   const [isExpanded, setIsExpanded] = useState(false); // Quản lý trạng thái mở rộng mô tả
   const [errorMessage, setErrorMessage] = useState(''); // Quản lý trạng thái lỗi
 
+  const kpiPoints = {
+    "Thiết kế": 10,
+    "Content": 10,
+    "Chụp/Quay": 20,
+    "Xử lí ảnh": 10,
+    "Kế hoạch": 15,
+    "Edit video": 15,
+    "Website": 50
+  };
+  
   // Function to handle uploading the product link
   const handleUploadLink = async () => {
     // Kiểm tra xem productLink có trống hay không
@@ -35,15 +46,33 @@ const TaskDetails = ({ task, onClose, onTaskUpdated }) => {
   
       // Tính toán trạng thái tiến độ
       let progressStatus = '';
+      let taskPoints = kpiPoints[task.type] || 0; // Điểm KPI mặc định
       if (deadlineDate) {
-        progressStatus = currentTime > deadlineDate ? 'Trễ tiến độ' : 'Đúng tiến độ';
+        const timeDifference = currentTime - deadlineDate; // Khoảng thời gian hoàn thành sau deadline (ms)
+      
+        if (timeDifference > 0) {
+          // Kiểm tra thời gian hoàn thành so với deadline
+          const hoursLate = timeDifference / (1000 * 60 * 60); // Chuyển đổi sang giờ
+          if (hoursLate <= 24) {
+            progressStatus = 'Trễ <24h';
+            taskPoints *= 0.5; // 50% điểm nếu trễ trong vòng 24 tiếng
+          } else {
+            progressStatus = 'Trễ >24h';
+            taskPoints = 0; // 0 điểm nếu trễ hơn 24 tiếng
+          }
+        } else {
+          progressStatus = 'Đúng tiến độ';
+        }
       }
+      
   
+      // Cập nhật Firestore
       await updateDoc(taskRef, {
         productLink: productLink,
         status: 'Hoàn Thành', // Thay đổi trạng thái thành 'Hoàn thành' khi tải link
         progressStatus: progressStatus, // Cập nhật trạng thái tiến độ
         updatedAt: currentTime, // Lưu thời gian cập nhật
+        kpiPoints: taskPoints // Thêm trường kpiPoints vào Firestore
       });
   
       // Gọi hàm onTaskUpdated để yêu cầu load lại task

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
 import { firestore } from '../../firebase';
 
 const Reports = () => {
@@ -23,18 +23,19 @@ const Reports = () => {
   const fetchUsers = async () => {
     try {
       const usersCollection = collection(firestore, 'users');
-      const usersSnapshot = await getDocs(usersCollection);
+      const usersQuery = query(usersCollection, where('role', '==', 'user')); // Lọc theo role là "user"
+      const usersSnapshot = await getDocs(usersQuery);
       const usersList = usersSnapshot.docs.map(doc => ({
         id: doc.id,
         name: doc.data().name,
       }));
-
+  
       setUsers(usersList);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách người dùng:", error);
     }
   };
-
+  
   const fetchTasks = async () => {
     try {
       const tasksCollection = collection(firestore, 'tasks');
@@ -107,14 +108,20 @@ const Reports = () => {
     const userTasks = getUserTasks(userId);
     const totalTasks = userTasks.length;
     const completedTasks = userTasks.filter(task => task.status === "Hoàn Thành").length;
-    const lateTasks = userTasks.filter(task => task.progressStatus === "Trễ tiến độ").length;
+    const lateTasks = userTasks.filter(task => 
+      task.progressStatus === "Trễ <24h" || task.progressStatus === "Trễ >24h" || task.progressStatus === "Trễ tiến độ"
+    ).length;
+    
 
     const { kpi, realKpi } = userTasks.reduce((acc, task) => {
       const kpi = kpiPoints[task.type] || 0;
       acc.kpi += kpi;
 
       if (task.status === "Hoàn Thành") {
-        const progressPoints = task.progressStatus === "Đúng tiến độ" ? kpi : kpi * 0.5;
+        const progressPoints = 
+          task.progressStatus === "Đúng tiến độ" ? kpi :
+          task.progressStatus === "Trễ <24h" ? kpi * 0.5 :
+          0;
         acc.realKpi += progressPoints;
       }
 

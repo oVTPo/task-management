@@ -7,10 +7,9 @@ import listPlugin from '@fullcalendar/list';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import viLocale from '@fullcalendar/core/locales/vi'; // Import ngôn ngữ tiếng Việt
 
-const TaskCalendar = ({ isToday = false }) => { // Nhận isToday từ props
+const TaskCalendar = ({ isToday = false, viewMode = "listMonth", showViewButtons = true }) => {
   const [events, setEvents] = useState([]);
 
-  // Lấy tên người dùng từ UID
   const getUserName = async (uid) => {
     const userRef = doc(db, 'users', uid); 
     const userDoc = await getDoc(userRef);
@@ -23,34 +22,32 @@ const TaskCalendar = ({ isToday = false }) => { // Nhận isToday từ props
         const querySnapshot = await getDocs(collection(db, 'tasks'));
         const taskPromises = querySnapshot.docs.map(async (docSnapshot) => {
           const data = docSnapshot.data();
-          
-          const userName = await getUserName(data.assignedTo); // Lấy tên người giao nhiệm vụ
-          const formattedDate = new Date(data.deadline.seconds * 1000); // Định dạng ngày deadline
-          const taskName = data.name || 'Không có tên nhiệm vụ'; // Lấy tên nhiệm vụ
-          const formattedTime = formattedDate.toLocaleTimeString(); // Định dạng giờ
-          const status = data.status || 'Chưa có trạng thái'; // Lấy trạng thái nhiệm vụ
+          const userName = await getUserName(data.assignedTo);
+          const formattedDate = new Date(data.deadline.seconds * 1000);
+          const taskName = data.name || 'Không có tên nhiệm vụ';
+          const formattedTime = formattedDate.toLocaleTimeString();
+          const status = data.status || 'Chưa có trạng thái';
 
           return {
-            title: `${taskName} - ${userName}`,  // Tiêu đề chứa tên nhiệm vụ và người thực hiện
+            title: `${taskName} - ${userName}`,
             start: formattedDate.toISOString(),
             extendedProps: {
               taskName,
               userName,
               time: formattedTime,
-              status, // Truyền trạng thái vào extendedProps
+              status,
             },
           };
         });
 
         const tasks = await Promise.all(taskPromises);
         
-        // Nếu isToday là true, lọc chỉ lấy sự kiện hôm nay
         if (isToday) {
-          const today = new Date().toISOString().split('T')[0]; // Lấy ngày hiện tại (YYYY-MM-DD)
+          const today = new Date().toISOString().split('T')[0];
           const todayEvents = tasks.filter(event => event.start.split('T')[0] === today);
-          setEvents(todayEvents);  // Chỉ set các sự kiện của hôm nay
+          setEvents(todayEvents);
         } else {
-          setEvents(tasks); // Không lọc, lấy tất cả sự kiện
+          setEvents(tasks);
         }
       } catch (error) {
         console.error('Lỗi khi tải dữ liệu:', error);
@@ -58,29 +55,31 @@ const TaskCalendar = ({ isToday = false }) => { // Nhận isToday từ props
     };
 
     fetchTasks();
-  }, [isToday]); // Chạy lại mỗi khi isToday thay đổi
+  }, [isToday]);
 
   return (
-    <div className=" bg-gray-100">
+    <div className="bg-gray-100">
       <div className="bg-white shadow-lg rounded-lg p-6 mb-6">
         <FullCalendar
-          plugins={[dayGridPlugin, listPlugin, timeGridPlugin]} // Giữ lại các plugin cần thiết
-          initialView="listMonth" // Chế độ xem mặc định là danh sách tháng
-          locale="vi" // Ngôn ngữ tiếng Việt
-          headerToolbar={{
+          plugins={[dayGridPlugin, listPlugin, timeGridPlugin]}
+          initialView={viewMode} 
+          locale="vi"
+          headerToolbar={showViewButtons ? {
             left: 'prev,next today',
             center: 'title',
-            right: 'listMonth', // Chỉ hiển thị chế độ "listMonth"
+            right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',  // Hiển thị tất cả các nút nếu showViewButtons = true
+          } : {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'listMonth',  // Chỉ hiển thị chế độ "listMonth" nếu showViewButtons = false
           }}
           events={events}
           eventContent={(eventInfo) => {
             const { taskName, userName, time, status } = eventInfo.event.extendedProps;
-            
-            // Đặt màu nền và màu chữ dựa trên trạng thái
             const taskCardClass = status === 'Hoàn Thành' ? 'bg-green-200' : 'bg-gray-50';
             const titleTextClass = status === 'Hoàn Thành' ? 'text-green-600' : 'text-blue-600';
-
             const truncatedTaskName = taskName.length > 28 ? taskName.slice(0, 20) + "..." : taskName;
+
             return (
               <div className={`flex flex-col p-2 space-y-1 border-2 rounded-lg shadow-md ${taskCardClass}`}>
                 <div className={`font-semibold text-md ${titleTextClass}`}>{truncatedTaskName}</div>
