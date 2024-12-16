@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
 import { firestore } from '../../firebase';
+import Loading from '../Loading'
 
 const Reports = () => {
   const [users, setUsers] = useState([]);
@@ -164,7 +165,7 @@ const Reports = () => {
 
       <div className="bg-white shadow-lg rounded-lg p-6 mb-6">
         {loading ? (
-          <p>Đang tải...</p>
+          <Loading/>
         ) : (
           <table className="min-w-full h-full table-auto bg-white rounded-lg">
             <thead className="bg-gray-50">

@@ -4,6 +4,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid"; 
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { jsPDF } from "jspdf";
+import Loading from './Loading'
 import html2canvas from "html2canvas";
 
 const UserSchedules = () => {
@@ -11,9 +12,11 @@ const UserSchedules = () => {
   const [resources, setResources] = useState([]);
   const [hoveredInfo, setHoveredInfo] = useState([]); 
   const [tooltipPosition, setTooltipPosition] = useState({ left: 0, top: 0 });
+  const [loading, setLoading] = useState(true);
   const db = getFirestore();
 
   const loadSchedules = async () => {
+    setLoading(true)
     try {
       const usersRef = collection(db, "users");
       const usersQuery = query(usersRef, where("role", "==", "user"));
@@ -51,11 +54,12 @@ const UserSchedules = () => {
           }
         }
       }
-
+      setLoading(false)
       setEvents(calendarEvents); 
       setResources(userResources); 
     } catch (error) {
       console.error("Lỗi khi tải lịch làm việc:", error);
+      setLoading(false);
     }
   };
 
@@ -145,44 +149,48 @@ const UserSchedules = () => {
         </div>
       )}
 
-      <div id="calendar">
-        <FullCalendar
-          plugins={[timeGridPlugin, resourceTimeGridPlugin]}
-          initialView="resourceTimeGridWeek"
-          events={events}
-          resources={resources}
-          headerToolbar={{
-            start: "prev,next today",
-            center: "title",
-            end: "resourceTimeGridDay,resourceTimeGridWeek",
-          }}
-          allDaySlot={false}
-          slotMinTime="07:00:00"
-          slotMaxTime="20:00:00"
-          locale="vi"
-          nowIndicator={true}
-          eventContent={(arg) => {
-            const { event } = arg;
-            const [name, status, time] = event.title.split("\n");
-            return (
-              <div className={`flex flex-col p-2 rounded-md shadow-sm`}>
-              </div>
-            );
-          }}
-          eventClassNames={(arg) => {
-            if (arg.event.extendedProps.status === "online") {
-              return "bg-yellow-300 text-yellow"; 
-            } else if (arg.event.extendedProps.status === "offline") {
-              return "bg-primary-200 text-primary"; 
-            }
-            return ""; 
-          }}
-          height="auto"
-          contentHeight="auto"
-          eventMouseEnter={handleMouseEnter}
-          eventMouseLeave={handleMouseLeave}
-        />
-      </div>
+      {loading ? (
+        <Loading/>
+      ) : (
+        <div id="calendar">
+          <FullCalendar
+            plugins={[timeGridPlugin, resourceTimeGridPlugin]}
+            initialView="resourceTimeGridWeek"
+            events={events}
+            resources={resources}
+            headerToolbar={{
+              start: "prev,next today",
+              center: "title",
+              end: "resourceTimeGridDay,resourceTimeGridWeek",
+            }}
+            allDaySlot={false}
+            slotMinTime="07:00:00"
+            slotMaxTime="20:00:00"
+            locale="vi"
+            nowIndicator={true}
+            eventContent={(arg) => {
+              const { event } = arg;
+              const [name, status, time] = event.title.split("\n");
+              return (
+                <div className={`flex flex-col p-2 rounded-md shadow-sm`}>
+                </div>
+              );
+            }}
+            eventClassNames={(arg) => {
+              if (arg.event.extendedProps.status === "online") {
+                return "bg-yellow-300 text-yellow"; 
+              } else if (arg.event.extendedProps.status === "offline") {
+                return "bg-primary-200 text-primary"; 
+              }
+              return ""; 
+            }}
+            height="auto"
+            contentHeight="auto"
+            eventMouseEnter={handleMouseEnter}
+            eventMouseLeave={handleMouseLeave}
+          />
+        </div>
+      )}
 
       <div className="mt-4 flex items-center justify-evenly">
         <div className="flex items-center">
